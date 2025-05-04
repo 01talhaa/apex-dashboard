@@ -13,8 +13,8 @@
                 d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
             </svg>
           </div>
-          <span class="ml-2">{{ shop.name ? shop.name + "'s" : 'ACTIVE' }}<span
-              class="text-red-500">Platform</span></span>
+            <span class="ml-3">NHL<span
+                class="text-red-500">Dashboard</span></span>
         </div>
       </div>
 
