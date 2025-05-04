@@ -2,7 +2,7 @@ import axios from 'axios'
 
 // Create Axios instance
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL, // Your API base URL
+  baseURL: import.meta.env.NUXT_PUBLIC_API_URL, // Your API base URL
   headers: {
     'Content-Type': 'application/json',
   },

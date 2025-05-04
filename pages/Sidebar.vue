@@ -13,7 +13,7 @@
                 d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
             </svg>
           </div>
-            <span class="ml-3">NHL<span
+            <span class="ml-3">{{shop.name}}<span
                 class="text-red-500">Dashboard</span></span>
         </div>
       </div>
@@ -138,6 +138,7 @@
 <script setup>
 import { ref, computed, h } from 'vue';
 import { useRoute } from 'vue-router';
+import api from "@/utils/api";
 
 // Props - only define once!
 const props = defineProps({
@@ -153,6 +154,16 @@ const props = defineProps({
 
 // Emits
 const emit = defineEmits(['logout']);
+const shop = ref({
+    name: '',
+    type: '',
+    email: '',
+    phone: '',
+    country: '',
+    address: '',
+    announcement: '',
+    logo: ''
+  });
 
 const searchQuery = ref("");
 const filteredMenuItems = computed(() => {
@@ -160,6 +171,38 @@ const filteredMenuItems = computed(() => {
     item.name.toLowerCase().includes(searchQuery.value.toLowerCase())
   );
 });
+
+onMounted(() => {
+  getShopDetails();
+});
+
+const getShopDetails = async () => {
+  const localData = localStorage.getItem("shopData");
+  if (localData) {
+    shop.value = JSON.parse(localData);
+    return;
+  }
+
+  try {
+    const { data } = await api.get("/shop-details");
+
+    shop.value = {
+      name: data.business_name || "",
+      type: data.business_type || "",
+      email: data.shop_email || "",
+      phone: data.shop_phone || "",
+      country: data.country || "",
+      address: data.shop_address || "",
+      announcement: data.topbar_announcement || "",
+      logo: "", // TODO: handle logo loading if available
+    };
+
+    localStorage.setItem("shopData", JSON.stringify(shop.value));
+  } catch (err) {
+    console.error("❌ Failed to fetch shop details:", err);
+  }
+};
+
 
 const handleLogout = () => {
   localStorage.removeItem('token');
