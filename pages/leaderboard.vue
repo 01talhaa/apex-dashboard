@@ -233,7 +233,7 @@ const fetchLeaderboard = async () => {
     loading.value = true;
     error.value = null; // Reset error state
 
-    const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/leaderboard`, {
+    const response = await axios.get(`${import.meta.env.NUXT_PUBLIC_API_URL}/leaderboard`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       },

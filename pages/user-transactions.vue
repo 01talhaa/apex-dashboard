@@ -737,7 +737,7 @@ import { debounce } from "lodash-es";
 import Sidebar from "./Sidebar.vue";
 
 // Base URL for the API
-const baseUrl = import.meta.env.VITE_API_BASE_URL || "https://api.example.com";
+const baseUrl = import.meta.env.NUXT_PUBLIC_API_URL || "https://api.example.com";
 
 // Menu items definition
 const menuItems = [

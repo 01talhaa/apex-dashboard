@@ -542,7 +542,7 @@ const fetchSpinnerItems = async () => {
       return;
     }
 
-    const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/spinner`, {
+    const response = await axios.get(`${import.meta.env.NUXT_PUBLIC_API_URL}/spinner`, {
       headers: {
         'Authorization': `Bearer ${token}`,
       }
@@ -641,7 +641,7 @@ const submitCooldownTimes = async () => {
     const formattedTime = `${formattedHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00 ${period}`;
 
     const response = await axios.post(
-      `${import.meta.env.VITE_API_BASE_URL}/spinner`,
+      `${import.meta.env.NUXT_PUBLIC_API_URL}/spinner`,
       {
         spin_time: formattedTime,
         rotation_point: randomIndex.toString()
@@ -801,7 +801,7 @@ const sendItemsToServer = async () => {
     }
 
     const response = await axios.patch(
-      `${import.meta.env.VITE_API_BASE_URL}/spinner-items`,
+      `${import.meta.env.NUXT_PUBLIC_API_URL}/spinner-items`,
       { items: items.value },
       {
         headers: {
@@ -846,7 +846,7 @@ const deleteSpinTimer = async (id) => {
       return;
     }
 
-    const response = await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/spinner/${id}`, {
+    const response = await axios.delete(`${import.meta.env.NUXT_PUBLIC_API_URL}/spinner/${id}`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -907,7 +907,7 @@ const saveEditedTimer = async () => {
     const formattedTime = `${formattedHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00 ${period}`;
 
     const response = await axios.patch(
-      `${import.meta.env.VITE_API_BASE_URL}/spinner/${editTimerForm.value.id}`,
+      `${import.meta.env.NUXT_PUBLIC_API_URL}/spinner/${editTimerForm.value.id}`,
       {
         spin_time: formattedTime,
         rotation_point: editTimerForm.value.rotationPoint.toString()
@@ -988,7 +988,7 @@ const fetchLeaderboard = async () => {
       return;
     }
 
-    const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/leaderboard`, {
+    const response = await axios.get(`${import.meta.env.NUXT_PUBLIC_API_URL}/leaderboard`, {
       params: {
         limit: 5
       },

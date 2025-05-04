@@ -38,7 +38,7 @@ export const useAuthStore = defineStore('auth', {
     async login({ phone, password }: { phone: string; password: string }) {
       this.loading = true
       try {
-        const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/auth/login`, { phone, password })
+        const response = await axios.post(`${import.meta.env.NUXT_PUBLIC_API_URL}/auth/login`, { phone, password })
 
         console.log('API Response:', response)
 
