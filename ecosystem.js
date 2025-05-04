@@ -1,14 +1,14 @@
-// ecosystem.config.js
-export const apps = [
+module.exports = {
+  apps: [
     {
-        name: 'nhl-staging-dashboard',
-        script: '.output/server/index.mjs',
-        exec_mode: 'fork', // or 'cluster' if you want multiple instances
-        instances: 1,
-        env: {
-            NODE_ENV: 'staging',
-            NUXT_PORT: 4000,
-            NUXT_HOST: '0.0.0.0'
-        }
+      name: 'nhl-staging-dashboard',
+      script: '.output/server/index.mjs',
+      env: {
+        NUXT_PORT: 3100,
+        NUXT_HOST: '0.0.0.0',
+        NODE_ENV: 'staging',
+        NUXT_PUBLIC_API_URL: 'https://staging-replica-api.apexdrive365.com/api'
+      }
     }
-];
+  ]
+}

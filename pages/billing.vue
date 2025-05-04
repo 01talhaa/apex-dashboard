@@ -251,7 +251,7 @@ const fetchCustomers = async (page = 1, isRefresh = false) => {
       customers.value = [];
     }
 
-    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/withdraws?page=${page}`, {
+    const response = await fetch(`${import.meta.env.NUXT_PUBLIC_API_URL}/withdraws?page=${page}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Accept': 'application/json',
@@ -343,7 +343,7 @@ const updateStatus = async (customer) => {
       throw new Error('No authentication token found');
     }
 
-    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/withdraws/${customer.id}/approve`, {
+    const response = await fetch(`${import.meta.env.NUXT_PUBLIC_API_URL}/withdraws/${customer.id}/approve`, {
       method: 'POST',
       headers: {
         'Accept': 'application/json',

@@ -344,7 +344,7 @@ const generateIds = async () => {
         date: new Date().toISOString().split('T')[0]
       }));
 
-      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/transactions`, {
+      const response = await axios.post(`${import.meta.env.NUXT_PUBLIC_API_URL}/transactions`, {
         transactions: newIds
       }, {
         headers: {
@@ -371,7 +371,7 @@ const generateIds = async () => {
 const fetchTransactions = async (page = currentPage.value) => {
   try {
     loading.value = true;
-    const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/transactions`, {
+    const response = await axios.get(`${import.meta.env.NUXT_PUBLIC_API_URL}/transactions`, {
       params: {
         page,
         limit: itemsPerPage.value
@@ -407,7 +407,7 @@ const fetchTransactions = async (page = currentPage.value) => {
 const deleteId = async (transactionId) => {
   try {
     loading.value = true;
-    const response = await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/transactions/all-delete`, {
+    const response = await axios.delete(`${import.meta.env.NUXT_PUBLIC_API_URL}/transactions/all-delete`, {
       data: {
         transactionIds: [transactionId]
       },
@@ -436,7 +436,7 @@ const confirmDeleteAll = () => {
 const deleteAllIds = async () => {
   try {
     loading.value = true;
-    const response = await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/transactions/all-delete`, {
+    const response = await axios.delete(`${import.meta.env.NUXT_PUBLIC_API_URL}/transactions/all-delete`, {
       data: {
         transactionIds: generatedIds.value.map(id => id.transactionId)
       },
@@ -577,7 +577,7 @@ watch(searchQuery, async (newQuery) => {
   currentPage.value = 1;
   try {
     loading.value = true;
-    const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/transactions`, {
+    const response = await axios.get(`${import.meta.env.NUXT_PUBLIC_API_URL}/transactions`, {
       params: {
         page: 1,
         limit: itemsPerPage.value,
