@@ -65,6 +65,21 @@ onMounted(() => {
   }
 })
 
+// Function to decode JWT token
+const decodeJWT = (token: string) => {
+  try {
+    const base64Url = token.split('.')[1]
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+    }).join(''))
+    return JSON.parse(jsonPayload)
+  } catch (error) {
+    console.error('Error decoding JWT:', error)
+    return null
+  }
+}
+
 const handleLogin = async () => {
   try {
     error.value = null
@@ -77,6 +92,18 @@ const handleLogin = async () => {
     const token = AuthStore.getToken
     if (token) {
       localStorage.setItem('token', token)
+      
+      // Decode the token to extract user information
+      const decodedToken = decodeJWT(token)
+      if (decodedToken && decodedToken.sub) {
+        // Store the user ID (sub) for use as entity ID
+        localStorage.setItem('user_id', decodedToken.sub)
+        console.log('User ID stored:', decodedToken.sub)
+        console.log('Decoded token:', decodedToken)
+      } else {
+        console.warn('Could not extract user ID from token')
+      }
+      
       await router.push('/dashboard')
     } else {
       throw new Error('No token received')

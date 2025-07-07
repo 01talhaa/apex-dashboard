@@ -39,7 +39,7 @@
               <button @click="confirmDeleteAll"
                 class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 flex items-center gap-2"
                 :disabled="!generatedIds.length || loading">
-                Delete All
+                Suspend All
               </button>
               <div class="relative inline-block">
                 <button @click="showDownloadOptions = !showDownloadOptions"
@@ -119,7 +119,7 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       <button @click="deleteId(id.transactionId)"
                         class="text-red-600 hover:text-red-800 transition-colors duration-200">
-                        <span class="material-icons text-xl">delete</span>
+                        <span class="material-icons text-xl">Suspend</span>
                       </button>
                     </td>
                   </tr>
@@ -225,17 +225,10 @@ const shop = ref({
 
 // Menu items definition
 const menuItems = [
-  // { name: "Dashboard", path: "/dashboard", icon: "LayoutDashboard" },
-  // { name: "Products", path: "/products", icon: "Package" },
-  // { name: "Orders", path: "/orders", icon: "ShoppingCart" },
   { name: "Customers", path: "/customers", icon: "Users" },
-  // { name: "Reports", path: "/reports", icon: "BarChart" },
-  // { name: "Manage Shop", path: "/manageShop", icon: "Settings" },
-  // { name: "Cupon", path: "/cupon", icon: "Tag" },
-  // { name: "Invoicing", path: "/invoicing", icon: "FileText" },
   { name: "Lucky Spin", path: "/luckyspin", icon: "Award" },
   { name: "Leaderboard", path: "/leaderboard", icon: "Trophy" },
-  { name: "Billing", path: "/billing", icon: "CreditCard" },
+  { name: "Withdraw", path: "/withdraw", icon: "CreditCard" },
   { 
     name: "Transactions", 
     icon: "DollarSign",
@@ -244,10 +237,8 @@ const menuItems = [
       { name: "User Transactions", path: "/user-transactions", icon: "FileText" }
     ]
   },
+  { name: "Ads", path: "/ads", icon: "CreditCard" },
 ];
-// ...existing code...
-
-
 const numberOfIds = ref("");
 const generatedIds = ref([]);
 const searchQuery = ref("");

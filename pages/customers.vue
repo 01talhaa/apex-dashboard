@@ -24,7 +24,7 @@
       <main class="p-4 mt-0.5">
 
         <div class="container mx-auto p-6">
-          <h1 class="text-3xl font-semibold mb-6">Customers - Active eCommerce CMS</h1>
+          <h1 class="text-3xl font-semibold mb-6">Customers Page</h1>
 
           <div class="flex justify-between items-center mb-4">
             <!-- Search Bar -->
@@ -113,7 +113,7 @@
                       </div>
                       <div class="ml-4">
                         <div class="text-sm font-medium text-gray-900">{{ customer.name }}</div>
-                        <div class="text-xs text-gray-500" v-if="customer.created_at">Created: {{ formatDate(customer.created_at) }}</div>
+                        <div class="text-xs text-gray-500" v-if="customer.created_at">Created: {{ customer.created_at }}</div>
                       </div>
                     </div>
                   </td>
@@ -232,13 +232,7 @@
                   placeholder="Enter address">
               </div>
 
-              <!-- Role Field -->
-              <div class="form-group">
-                <label for="role" class="label-style">Role</label>
-                <select id="role" v-model="modalCustomer.role" class="select-style">
-                  <option value="customer">Customer</option>
-                </select>
-              </div>
+
 
               <!-- Wallet Balance Field -->
               <div class="form-group">
@@ -315,25 +309,22 @@
       </div>
     </div>
   </div>
+  
+  <!-- Notification Container -->
+  <NotificationContainer />
 </template>
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import { debounce } from 'lodash-es';
+import { debounce } from 'lodash-es'
+import { useNotificationStore } from '@/stores/useNotificationStore'
 
 // Menu items definition
 const menuItems = [
-  // { name: "Dashboard", path: "/dashboard", icon: "LayoutDashboard" },
-  // { name: "Products", path: "/products", icon: "Package" },
-  // { name: "Orders", path: "/orders", icon: "ShoppingCart" },
   { name: "Customers", path: "/customers", icon: "Users" },
-  // { name: "Reports", path: "/reports", icon: "BarChart" },
-  // { name: "Manage Shop", path: "/manageShop", icon: "Settings" },
-  // { name: "Cupon", path: "/cupon", icon: "Tag" },
-  // { name: "Invoicing", path: "/invoicing", icon: "FileText" },
   { name: "Lucky Spin", path: "/luckyspin", icon: "Award" },
   { name: "Leaderboard", path: "/leaderboard", icon: "Trophy" },
-  { name: "Billing", path: "/billing", icon: "CreditCard" },
+  { name: "Withdraw", path: "/withdraw", icon: "CreditCard" },
   { 
     name: "Transactions", 
     icon: "DollarSign",
@@ -342,13 +333,17 @@ const menuItems = [
       { name: "User Transactions", path: "/user-transactions", icon: "FileText" }
     ]
   },
+  { name: "Ads", path: "/ads", icon: "CreditCard" },
 ];
-// ...existing code...
 
 // Add token handling function
 const getToken = () => {
   const token = localStorage.getItem('token');
   if (!token) {
+    showNotification('Authentication token not found. Please login again.', 'error');
+    setTimeout(() => {
+      window.location.href = '/';
+    }, 2000);
     throw new Error('No authentication token found');
   }
   return token;
@@ -399,6 +394,14 @@ const modalCustomer = ref({
 const showPassword = ref(false);
 const formErrors = ref({});
 
+// Notification store
+const notificationStore = useNotificationStore();
+
+// Notification helper function
+const showNotification = (message, type = 'info', options = {}) => {
+  notificationStore.addNotification(message, type, options?.duration || 5000, options);
+};
+
 // Update these refs for pagination
 const currentPage = ref(1);
 const itemsPerPage = ref(10);
@@ -430,7 +433,10 @@ const fetchCustomers = async (page = 1) => {
 
     if (response.status === 401) {
       localStorage.removeItem('token');
-      window.location.href = '/'; // Redirect to login
+      showNotification('Session expired. Please login again.', 'error');
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 2000);
       throw new Error('Session expired. Please login again.');
     }
 
@@ -458,6 +464,7 @@ const fetchCustomers = async (page = 1) => {
   } catch (e) {
     error.value = e.message;
     console.error("Error fetching customers:", e);
+    showNotification(e.message || 'Failed to fetch customers', 'error');
   } finally {
     loading.value = false;
   }
@@ -539,7 +546,30 @@ const closeModal = () => {
 
 // Update the saveCustomer function
 const saveCustomer = async () => {
+  // Basic validation
+  if (!modalCustomer.value.name?.trim()) {
+    showNotification('Customer name is required', 'warning');
+    return;
+  }
+  
+  if (!modalCustomer.value.phone?.trim()) {
+    showNotification('Customer phone is required', 'warning');
+    return;
+  }
+  
+  if (!editingCustomer.value && !modalCustomer.value.password) {
+    showNotification('Password is required for new customers', 'warning');
+    return;
+  }
+  
+  if (!editingCustomer.value && modalCustomer.value.password !== modalCustomer.value.password_confirmation) {
+    showNotification('Passwords do not match', 'warning');
+    return;
+  }
+  
   loading.value = true;
+  showNotification('Saving customer...', 'info');
+  
   try {
     const token = getToken();
     const apiUrl = editingCustomer.value
@@ -548,7 +578,7 @@ const saveCustomer = async () => {
 
     let formattedPhone = modalCustomer.value.phone || '';
     formattedPhone = formattedPhone.replace(/[^\d+]/g, '');
-    if (!formattedPhone.startsWith('+')) {
+    if (!formattedPhone.startsWith('')) {
       formattedPhone = '+' + formattedPhone;
     }
 
@@ -598,14 +628,14 @@ const saveCustomer = async () => {
     if (data.success) {
       await fetchCustomers();
       closeModal();
-      alert('Customer saved successfully');
+      showNotification('Customer saved successfully', 'success');
     } else {
       throw new Error(data.message || 'Failed to save customer');
     }
   } catch (e) {
     error.value = e.message;
     console.error('Error saving customer:', e);
-    alert(e.message);
+    showNotification(e.message || 'Failed to save customer', 'error');
   } finally {
     loading.value = false;
   }
@@ -651,10 +681,17 @@ const performSearch = async () => {
         column: searchColumn.value,
         results: customers.value.length
       });
+      
+      if (customers.value.length > 0) {
+        showNotification(`Found ${customers.value.length} customer(s)`, 'success');
+      } else {
+        showNotification('No customers found matching your search', 'info');
+      }
     }
   } catch (err) {
     error.value = err.message;
     console.error('Search error:', err);
+    showNotification(err.message || 'Search failed', 'error');
   } finally {
     loading.value = false;
   }
@@ -662,6 +699,7 @@ const performSearch = async () => {
 
 const clearSearch = async () => {
   customerSearchQuery.value = '';
+  showNotification('Search cleared', 'info');
   await fetchCustomers(1);
 };
 
@@ -691,6 +729,7 @@ const formatDate = (dateString) => {
 };
 
 import Sidebar from './Sidebar.vue';
+import NotificationContainer from '@/components/NotificationContainer.vue';
 </script>
 
 <style scoped>
