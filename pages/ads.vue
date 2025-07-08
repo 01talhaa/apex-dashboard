@@ -22,7 +22,7 @@
       <div class="p-6">
         <div class="max-w-6xl mx-auto">
           <!-- Page Header -->
-          <div ">
+          <div class="mb-6">
             <div>
               
             </div>

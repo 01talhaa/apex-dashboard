@@ -24,7 +24,7 @@
       <main class="p-4 mt-0.5">
 
         <div class="container mx-auto p-6">
-          <h1 class="text-3xl font-semibold mb-6">Customers Page</h1>
+          <h1 class="text-3xl font-semibold mb-6">Customers - Active eCommerce CMS</h1>
 
           <div class="flex justify-between items-center mb-4">
             <!-- Search Bar -->
