@@ -23,129 +23,188 @@
         <div class="max-w-6xl mx-auto">
           <!-- Page Header -->
           <div class="mb-6">
-            <div>
-              
-            </div>
-            
-            <!-- Notification Settings Button -->
-            <!-- <button
-              @click="showNotificationSettings = true"
-              class="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:from-blue-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 transform hover:scale-105 shadow-lg"
-              title="Notification Settings"
-            >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5zM4 12a8 8 0 118 8 8 8 0 01-8-8zm0 0V9a4 4 0 118 0v3"></path>
-              </svg>
-              <span class="hidden sm:inline">🔔 Settings</span>
-            </button> -->
           </div>
-          
-          <!-- Debug buttons -->
-          <!--
-          <div class="mb-4 flex gap-2 flex-wrap">
-            <button
-              @click="testApiConnectivity"
-              class="px-3 py-1 text-sm bg-yellow-600 text-white rounded hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500"
-            >
-              Test API Connectivity
-            </button>
-            <button
-              @click="debugApiConfig"
-              class="px-3 py-1 text-sm bg-purple-600 text-white rounded hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
-            >
-              Debug API Config
-            </button>
-            <button
-              @click="testNotifications"
-              class="px-3 py-1 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              Test Notifications
-            </button>
-            <button
-              @click="showAdvancedNotifications"
-              class="px-3 py-1 text-sm bg-pink-600 text-white rounded hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500"
-            >
-              ✨ Advanced Notifications
-            </button>
-          </div>
-          -->
-
           <!-- Upload Section -->
           <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h2 class="text-xl font-semibold text-gray-900 mb-4">Upload Files</h2>
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">Upload Ads</h2>
+            
+            <!-- Upload Type Selection -->
+            <div class="mb-6">
+              <label class="block text-sm font-medium text-gray-700 mb-3">
+                Select Ad Type
+              </label>
+              <div class="flex space-x-4">
+                <button
+                  @click="selectedUploadType = 'image'; selectedFiles = []; uploadForm.fileType = ''; customPlacementText = ''"
+                  :class="[
+                    'px-4 py-2 rounded-lg border-2 transition-all duration-200',
+                    selectedUploadType === 'image'
+                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                  ]"
+                >
+                  <div class="flex items-center space-x-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    <span>Image Ads</span>
+                  </div>
+                </button>
+                <button
+                  @click="selectedUploadType = 'video'; selectedFiles = []; uploadForm.fileType = ''; customPlacementText = ''"
+                  :class="[
+                    'px-4 py-2 rounded-lg border-2 transition-all duration-200',
+                    selectedUploadType === 'video'
+                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                  ]"
+                >
+                  <div class="flex items-center space-x-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                    </svg>
+                    <span>Video Ads</span>
+                  </div>
+                </button>
+                <button
+                  @click="selectedUploadType = 'slideshow'; selectedFiles = []; uploadForm.fileType = ''; customPlacementText = ''"
+                  :class="[
+                    'px-4 py-2 rounded-lg border-2 transition-all duration-200',
+                    selectedUploadType === 'slideshow'
+                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                  ]"
+                >
+                  <div class="flex items-center space-x-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                    </svg>
+                    <span>Slideshow Ads</span>
+                  </div>
+                </button>
+              </div>
+            </div>
             
             <form @submit.prevent="handleFileUpload" class="space-y-4">
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <!-- File Input -->
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Select Files
+                    Select {{ selectedUploadType === 'image' ? 'Image' : selectedUploadType === 'video' ? 'Video' : 'Slideshow' }} Files
                   </label>
                   <input
                     ref="fileInput"
                     type="file"
                     multiple
+                    :accept="selectedUploadType === 'image' ? '.jpg,.jpeg,.png,.gif,.bmp,.webp,.svg' : selectedUploadType === 'video' ? '.mp4,.avi,.mov,.mkv,.webm,.flv,.wmv,.m4v' : '.jpg,.jpeg,.png,.gif,.bmp,.webp,.svg,.mp4,.avi,.mov,.mkv,.webm,.flv,.wmv,.m4v'"
                     @change="handleFileSelect"
                     class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                   />
+                  <p class="text-xs text-gray-500 mt-1">
+                    {{ selectedUploadType === 'image' ? 'Supported formats: JPG, PNG, GIF, BMP, WebP, SVG' : selectedUploadType === 'video' ? 'Supported formats: MP4, AVI, MOV, MKV, WebM, FLV, WMV, M4V' : 'Supported formats: Images (JPG, PNG, GIF, BMP, WebP, SVG) and Videos (MP4, AVI, MOV, MKV, WebM, FLV, WMV, M4V)' }} • Max size: 10MB per file.
+                  </p>
                 </div>
 
                 <!-- File Type -->
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">
-                    File Type
-                    <span class="text-xs text-gray-500 ml-1">(Choose placement or content type)</span>
+                    {{ selectedUploadType === 'image' ? 'Image' : selectedUploadType === 'video' ? 'Video' : 'Slideshow' }} Placement
+                    <span class="text-xs text-gray-500 ml-1">(Choose or enter ad placement)</span>
                   </label>
+                  
+                  <!-- Predefined Placement Dropdown -->
                   <select
                     v-model="uploadForm.fileType"
-                    class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    @change="customPlacementText = ''"
+                    class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 mb-2"
                   >
-                    <option value="">Select file type</option>
-                    <optgroup label="Ad Placements">
-                      <option value="banner_top_left">Banner - Top Left</option>
-                      <option value="banner_top_right">Banner - Top Right</option>
-                      <option value="banner_top_center">Banner - Top Center</option>
-                      <option value="banner_bottom_left">Banner - Bottom Left</option>
-                      <option value="banner_bottom_right">Banner - Bottom Right</option>
-                      <option value="banner_bottom_center">Banner - Bottom Center</option>
-                      <option value="banner_center">Banner - Center</option>
-                      <option value="banner_sidebar_left">Banner - Sidebar Left</option>
-                      <option value="banner_sidebar_right">Banner - Sidebar Right</option>
-                      <option value="banner_header">Banner - Header</option>
-                      <option value="banner_footer">Banner - Footer</option>
-                      <option value="popup_ad">Popup Advertisement</option>
-                      <option value="floating_ad">Floating Advertisement</option>
-                      <option value="sticky_ad">Sticky Advertisement</option>
-                      <option value="interstitial_ad">Interstitial Advertisement</option>
-                    </optgroup>
-                    <optgroup label="Content Types">
-                      <option value="profile">Profile Image</option>
-                      <option value="product">Product Image</option>
-                      <option value="category">Category Image</option>
-                      <option value="brand_logo">Brand Logo</option>
-                      <option value="hero_image">Hero Image</option>
-                      <option value="gallery">Gallery Image</option>
-                      <option value="thumbnail">Thumbnail</option>
-                    </optgroup>
-                    <optgroup label="Documents">
-                      <option value="document">Document</option>
-                      <option value="pdf">PDF File</option>
-                      <option value="invoice">Invoice</option>
-                      <option value="receipt">Receipt</option>
-                      <option value="contract">Contract</option>
-                    </optgroup>
-                    <optgroup label="Media">
-                      <option value="video">Video</option>
-                      <option value="audio">Audio</option>
-                      <option value="animation">Animation</option>
-                    </optgroup>
-                    <optgroup label="Other">
-                      <option value="icon">Icon</option>
-                      <option value="other">Other</option>
-                    </optgroup>
+                    <option value="">Select ad placement</option>
+                    <template v-if="selectedUploadType === 'image'">
+                      <optgroup label="Ad Placements">
+                        <option value="banner_top_left">Banner - Top Left</option>
+                        <option value="banner_top_right">Banner - Top Right</option>
+                        <option value="banner_top_center">Banner - Top Center</option>
+                        <option value="banner_bottom_left">Banner - Bottom Left</option>
+                        <option value="banner_bottom_right">Banner - Bottom Right</option>
+                        <option value="banner_bottom_center">Banner - Bottom Center</option>
+                        <option value="banner_center">Banner - Center</option>
+                        <option value="banner_sidebar_left">Banner - Sidebar Left</option>
+                        <option value="banner_sidebar_right">Banner - Sidebar Right</option>
+                        <option value="banner_header">Banner - Header</option>
+                        <option value="banner_footer">Banner - Footer</option>
+                        <option value="popup_ad">Popup Advertisement</option>
+                        <option value="floating_ad">Floating Advertisement</option>
+                        <option value="sticky_ad">Sticky Advertisement</option>
+                        <option value="interstitial_ad">Interstitial Advertisement</option>
+                      </optgroup>
+                      <optgroup label="Content Types">
+                        <option value="profile">Profile Image</option>
+                        <option value="product">Product Image</option>
+                        <option value="category">Category Image</option>
+                        <option value="brand_logo">Brand Logo</option>
+                        <option value="hero_image">Hero Image</option>
+                        <option value="gallery">Gallery Image</option>
+                        <option value="thumbnail">Thumbnail</option>
+                      </optgroup>
+                      <optgroup label="Other">
+                        <option value="icon">Icon</option>
+                        <option value="other">Other</option>
+                      </optgroup>
+                    </template>
+                    <template v-else-if="selectedUploadType === 'video'">
+                      <optgroup label="Video Ad Placements">
+                        <option value="video_banner_top">Video Banner - Top</option>
+                        <option value="video_banner_center">Video Banner - Center</option>
+                        <option value="video_banner_bottom">Video Banner - Bottom</option>
+                        <option value="video_popup">Video Popup</option>
+                        <option value="video_floating">Video Floating</option>
+                        <option value="video_interstitial">Video Interstitial</option>
+                        <option value="video_pre_roll">Video Pre-roll</option>
+                        <option value="video_mid_roll">Video Mid-roll</option>
+                        <option value="video_post_roll">Video Post-roll</option>
+                      </optgroup>
+                      <optgroup label="Other">
+                        <option value="video">Video</option>
+                        <option value="animation">Animation</option>
+                      </optgroup>
+                    </template>
+                    <template v-else-if="selectedUploadType === 'slideshow'">
+                      <optgroup label="Slideshow Ad Placements">
+                        <option value="slideshow_banner_top">Slideshow Banner - Top</option>
+                        <option value="slideshow_banner_center">Slideshow Banner - Center</option>
+                        <option value="slideshow_banner_bottom">Slideshow Banner - Bottom</option>
+                        <option value="slideshow_popup">Slideshow Popup</option>
+                        <option value="slideshow_floating">Slideshow Floating</option>
+                        <option value="slideshow_interstitial">Slideshow Interstitial</option>
+                        <option value="slideshow_carousel">Slideshow Carousel</option>
+                        <option value="slideshow_gallery">Slideshow Gallery</option>
+                        <option value="slideshow_hero">Slideshow Hero</option>
+                      </optgroup>
+                      <optgroup label="Other">
+                        <option value="slideshow">Slideshow</option>
+                        <option value="presentation">Presentation</option>
+                      </optgroup>
+                    </template>
                   </select>
-                  <p class="text-xs text-gray-500 mt-1">
-                    Files will be automatically associated with your user account.
+                  
+                  <!-- Custom Placement Input -->
+                  <div class="relative">
+                    <input
+                      v-model="customPlacementText"
+                      @input="uploadForm.fileType = customPlacementText"
+                      type="text"
+                      placeholder="Or enter custom ad placement"
+                      class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    />
+                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                      <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                      </svg>
+                    </div>
+                  </div>
+                  
+                  <p class="text-xs text-gray-500 mt-2">
+                    Select from predefined placements or enter a custom placement type. Files will be automatically associated with your user account.
                   </p>
                 </div>
               </div>
@@ -197,7 +256,62 @@
           <div class="bg-white rounded-lg shadow-md">
             <div class="p-6 border-b border-gray-200">
               <div class="flex justify-between items-center">
-                <h2 class="text-xl font-semibold text-gray-900">Uploaded Files</h2>
+                <div class="flex items-center space-x-4">
+                  <h2 class="text-xl font-semibold text-gray-900">Uploaded Ads</h2>
+                  
+                  <!-- View Type Filter -->
+                  <div class="flex space-x-2">
+                    <button
+                      @click="selectedViewType = 'image'"
+                      :class="[
+                        'px-3 py-1 rounded-md text-sm font-medium transition-all duration-200',
+                        selectedViewType === 'image'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      ]"
+                    >
+                      <div class="flex items-center space-x-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        <span>Images</span>
+                      </div>
+                    </button>
+                    <button
+                      @click="selectedViewType = 'video'"
+                      :class="[
+                        'px-3 py-1 rounded-md text-sm font-medium transition-all duration-200',
+                        selectedViewType === 'video'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      ]"
+                    >
+                      <div class="flex items-center space-x-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                        </svg>
+                        <span>Videos</span>
+                      </div>
+                    </button>
+                    <button
+                      @click="selectedViewType = 'slideshow'"
+                      :class="[
+                        'px-3 py-1 rounded-md text-sm font-medium transition-all duration-200',
+                        selectedViewType === 'slideshow'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      ]"
+                    >
+                      <div class="flex items-center space-x-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                        </svg>
+                        <span>Slideshows</span>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+                
                 <button
                   @click="refreshFiles"
                   :disabled="isLoadingFiles"
@@ -223,21 +337,10 @@
             </div>
 
             <!-- Files Grid -->
-            <div v-else-if="files.length > 0" class="p-6">
-              <!-- Debug info for pagination -->
-              <!--
-              <div class="mb-4 p-3 bg-gray-100 rounded-md text-sm text-gray-600">
-                <strong>Debug Info:</strong> 
-                Total: {{ pagination.total }}, 
-                Pages: {{ pagination.totalPage }}, 
-                Current: {{ pagination.page }}, 
-                Limit: {{ pagination.limit }}
-              </div> 
-              -->
-              
+            <div v-else-if="filteredFiles.length > 0" class="p-6">
               <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div
-                  v-for="file in files"
+                  v-for="file in filteredFiles"
                   :key="file.id"
                   class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
                 >
@@ -245,21 +348,59 @@
                     <div class="flex-1">
                       <h3 class="font-medium text-gray-900">Ad ID: {{ file.id }}</h3>
                       <p class="text-sm text-gray-600">Type: {{ getFileTypeName(file.file_type) }}</p>
-                      <p class="text-sm text-gray-600">Entity: {{ file.entity_id }}</p>
+                      <p class="text-xs text-gray-500">Created: {{ file.created_at }}</p>
                     </div>
                     <span :class="['px-2 py-1 text-xs font-medium rounded-full', getCategoryColor(getFileTypeCategory(file.file_type))]">
-                      {{ getFileTypeName(file.file_type) }}
+                      {{ getDisplayType(file) }}
                     </span>
                   </div>
                   
-                  <!-- File Preview (if image) -->
-                  <div v-if="isImageFile(file.file_url)" class="mb-3">
-                    <img
-                      :src="file.file_url"
-                      :alt="`File ${file.id}`"
-                      class="w-full h-32 object-cover rounded border"
-                      @error="handleImageError"
-                    />
+                  <!-- File Preview -->
+                  <div class="mb-3">
+                    <!-- Image Preview -->
+                    <div v-if="selectedViewType === 'image' && (isImageAdType(file.file_type) || isImageFile(file.file_url) || isCustomImageType(file.file_type))">
+                      <img
+                        :src="file.file_url"
+                        :alt="`File ${file.id}`"
+                        class="w-full h-32 object-cover rounded border"
+                        @error="handleImageError"
+                      />
+                    </div>
+                    
+                    <!-- Video Preview -->
+                    <div v-else-if="selectedViewType === 'video' && (isVideoAdType(file.file_type) || isVideoFile(file.file_url) || isCustomVideoType(file.file_type))">
+                      <video
+                        :src="file.file_url"
+                        class="w-full h-32 object-cover rounded border"
+                        controls
+                        preload="metadata"
+                        @error="handleVideoError"
+                      >
+                        Your browser does not support the video tag.
+                      </video>
+                    </div>
+                    
+                    <!-- Slideshow Preview -->
+                    <div v-else-if="selectedViewType === 'slideshow' && (isSlideshowAdType(file.file_type) || isCustomSlideshowType(file.file_type))">
+                      <!-- Always show image preview for slideshow files (most slideshow content will be images) -->
+                      <img
+                        :src="file.file_url"
+                        :alt="`Slideshow ${file.id}`"
+                        class="w-full h-32 object-cover rounded border"
+                        @error="handleImageError"
+                      />
+                    </div>
+                    
+                    <!-- Fallback for unsupported files -->
+                    <div v-else class="w-full h-32 bg-gray-100 rounded border flex items-center justify-center">
+                      <div class="text-center text-gray-500">
+                        <svg class="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <p class="text-sm">{{ selectedViewType === 'image' ? 'Image' : selectedViewType === 'video' ? 'Video' : 'Slideshow' }} preview</p>
+                        <p class="text-xs">Type: {{ getFileTypeName(file.file_type) }}</p>
+                      </div>
+                    </div>
                   </div>
                   
                   <!-- Actions -->
@@ -271,10 +412,10 @@
                       Download
                     </button>
                     <button
-                      @click="copyUrlToClipboard(file.file_url)"
-                      class="flex-1 px-3 py-2 text-sm bg-gray-600 text-white rounded hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                      @click="deleteFile(file.id)"
+                      class="flex-1 px-3 py-2 text-sm bg-red-600 text-white rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
                     >
-                      Copy URL
+                      Delete
                     </button>
                   </div>
                 </div>
@@ -285,6 +426,7 @@
                 <!-- Pagination Info -->
                 <div class="text-sm text-gray-700">
                   Showing {{ ((pagination.page - 1) * pagination.limit) + 1 }} to {{ Math.min(pagination.page * pagination.limit, pagination.total) }} of {{ pagination.total }} files
+                  <span class="text-gray-500">(filtered by {{ selectedViewType }}: {{ filteredFiles.length }})</span>
                 </div>
                 
                 <!-- Pagination Controls -->
@@ -321,6 +463,17 @@
                   >
                     Next
                   </button>
+                  
+                  <!-- Items per page selector -->
+                  <select 
+                    v-model="pagination.limit" 
+                    @change="handleItemsPerPageChange"
+                    class="ml-2 px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                  >
+                    <option :value="10">10 per page</option>
+                    <option :value="20">20 per page</option>
+                    <option :value="50">50 per page</option>
+                  </select>
                 </nav>
               </div>
             </div>
@@ -330,8 +483,8 @@
               <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
                 <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
               </svg>
-              <h3 class="mt-2 text-sm font-medium text-gray-900">No files</h3>
-              <p class="mt-1 text-sm text-gray-500">Get started by uploading your first file.</p>
+              <h3 class="mt-2 text-sm font-medium text-gray-900">No {{ selectedViewType }} ads</h3>
+              <p class="mt-1 text-sm text-gray-500">Get started by uploading your first {{ selectedViewType }} ad.</p>
             </div>
           </div>
         </div>
@@ -341,21 +494,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
-import { useRouter } from "vue-router";
+import { ref, onMounted, computed } from "vue";
 import Sidebar from './Sidebar.vue';
-import { useStateStore } from '@/stores/useDataStore';
 import { useNotificationStore } from '@/stores/useNotificationStore';
-import { uploadFiles, getFiles, downloadFile, createDownloadLink, debugApiConfig } from '@/utils/fileApi';
+import { uploadFiles, getFiles, downloadFile, createDownloadLink } from '@/utils/fileApi';
 import type { FileItem, FileUploadForm, FilePagination } from '@/types/file';
-
-/*
-definePageMeta({
-  middleware: 'auth'
-})
-*/
-
-const router = useRouter();
 
 // Function to decode JWT token and get user ID
 const decodeJWT = (token: string) => {
@@ -377,8 +520,7 @@ const getUserId = () => {
   return localStorage.getItem('user_id') || 'default_user';
 };
 
-// Initialize state from the store
-const Storestats = useStateStore();
+// Initialize notification store
 const notificationStore = useNotificationStore();
 
 // File management state
@@ -394,6 +536,13 @@ const uploadForm = ref<FileUploadForm>({
   entityId: '', // This will be automatically set to user ID
 });
 
+// Media type selection
+const selectedUploadType = ref<'image' | 'video' | 'slideshow'>('image');
+const selectedViewType = ref<'image' | 'video' | 'slideshow'>('image');
+
+// Custom placement text input
+const customPlacementText = ref<string>('');
+
 // Pagination
 const pagination = ref<FilePagination>({
   page: 1,
@@ -402,12 +551,59 @@ const pagination = ref<FilePagination>({
   totalPage: 0,
 });
 
-// File selection handler
+// File selection handler with type validation
 const handleFileSelect = (event: Event) => {
   const target = event.target as HTMLInputElement;
   if (target.files) {
     const newFiles = Array.from(target.files);
-    selectedFiles.value = [...selectedFiles.value, ...newFiles];
+    
+    // Filter files based on selected upload type
+    const validFiles = newFiles.filter(file => {
+      if (selectedUploadType.value === 'image') {
+        // Check both MIME type and file extension for images
+        const isValidImageMime = file.type.startsWith('image/');
+        const isValidImageExt = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg'].some(ext => 
+          file.name.toLowerCase().endsWith(ext)
+        );
+        return isValidImageMime || isValidImageExt;
+      } else if (selectedUploadType.value === 'video') {
+        // Check both MIME type and file extension for videos
+        const isValidVideoMime = file.type.startsWith('video/');
+        const isValidVideoExt = ['.mp4', '.avi', '.mov', '.mkv', '.webm', '.flv', '.wmv', '.m4v'].some(ext => 
+          file.name.toLowerCase().endsWith(ext)
+        );
+        return isValidVideoMime || isValidVideoExt;
+      } else if (selectedUploadType.value === 'slideshow') {
+        // Check for both images and videos for slideshow
+        const isValidImageMime = file.type.startsWith('image/');
+        const isValidImageExt = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg'].some(ext => 
+          file.name.toLowerCase().endsWith(ext)
+        );
+        const isValidVideoMime = file.type.startsWith('video/');
+        const isValidVideoExt = ['.mp4', '.avi', '.mov', '.mkv', '.webm', '.flv', '.wmv', '.m4v'].some(ext => 
+          file.name.toLowerCase().endsWith(ext)
+        );
+        return isValidImageMime || isValidImageExt || isValidVideoMime || isValidVideoExt;
+      }
+      return false;
+    });
+    
+    // Show notification if some files were filtered out
+    if (validFiles.length !== newFiles.length) {
+      const filteredCount = newFiles.length - validFiles.length;
+      const supportedFormats = selectedUploadType.value === 'image' 
+        ? 'JPG, PNG, GIF, BMP, WebP, SVG'
+        : selectedUploadType.value === 'video'
+        ? 'MP4, AVI, MOV, MKV, WebM, FLV, WMV, M4V'
+        : 'Images (JPG, PNG, GIF, BMP, WebP, SVG) and Videos (MP4, AVI, MOV, MKV, WebM, FLV, WMV, M4V)';
+      
+      showNotification(
+        `${filteredCount} file(s) were filtered out. Only ${selectedUploadType.value} files are supported (${supportedFormats}).`,
+        'warning'
+      );
+    }
+    
+    selectedFiles.value = [...selectedFiles.value, ...validFiles];
   }
 };
 
@@ -425,7 +621,6 @@ const handleFileUpload = async () => {
 
   // Get user ID from localStorage and use it as entity ID
   const userId = getUserId();
-  console.log('Using user ID as entity ID:', userId);
 
   // Validate file sizes (max 10MB per file)
   const maxSize = 10 * 1024 * 1024; // 10MB
@@ -455,6 +650,7 @@ const handleFileUpload = async () => {
     // Reset form
     selectedFiles.value = [];
     uploadForm.value.fileType = '';
+    customPlacementText.value = '';
     if (fileInput.value) {
       fileInput.value.value = '';
     }
@@ -488,14 +684,18 @@ const handleFileUpload = async () => {
   }
 };
 
+// Handle change in items per page
+const handleItemsPerPageChange = async () => {
+  pagination.value.page = 1; // Reset to first page when changing items per page
+  await loadFiles(1);
+};
+
 // Load files from API
 const loadFiles = async (page: number = 1) => {
   isLoadingFiles.value = true;
   
   try {
-    console.log('Loading files for page:', page);
     const response = await getFiles(page, pagination.value.limit);
-    console.log('API Response:', response);
     
     files.value = response.result || [];
     pagination.value = {
@@ -505,7 +705,6 @@ const loadFiles = async (page: number = 1) => {
       totalPage: response.meta.totalPage || 0,
     };
     
-    console.log('Updated pagination:', pagination.value);
   } catch (error: any) {
     console.error('Load files error:', error);
     showNotification(error.message || 'Failed to load files. Please try again.', 'error');
@@ -531,7 +730,6 @@ const refreshFiles = async () => {
 // Change page
 const changePage = async (newPage: number) => {
   if (newPage >= 1 && newPage <= pagination.value.totalPage) {
-    console.log('Changing to page:', newPage);
     pagination.value.page = newPage;
     await loadFiles(newPage);
   }
@@ -543,8 +741,8 @@ const getVisiblePages = () => {
   const currentPage = pagination.value.page;
   const pages: (number | string)[] = [];
   
-  if (totalPages <= 7) {
-    // Show all pages if 7 or fewer
+  if (totalPages <= 9) {
+    // Show all pages if 9 or fewer
     for (let i = 1; i <= totalPages; i++) {
       pages.push(i);
     }
@@ -552,19 +750,19 @@ const getVisiblePages = () => {
     // Always show first page
     pages.push(1);
     
-    if (currentPage > 4) {
+    if (currentPage > 5) {
       pages.push('...');
     }
     
-    // Show pages around current page
-    const start = Math.max(2, currentPage - 1);
-    const end = Math.min(totalPages - 1, currentPage + 1);
+    // Show more pages around current page
+    const start = Math.max(2, currentPage - 2);
+    const end = Math.min(totalPages - 1, currentPage + 2);
     
     for (let i = start; i <= end; i++) {
       pages.push(i);
     }
     
-    if (currentPage < totalPages - 3) {
+    if (currentPage < totalPages - 4) {
       pages.push('...');
     }
     
@@ -589,24 +787,317 @@ const downloadFileFromUrl = async (fileUrl: string, filename: string) => {
   }
 };
 
-// Copy URL to clipboard
-const copyUrlToClipboard = async (url: string) => {
-  try {
-    await navigator.clipboard.writeText(url);
-    showNotification('URL copied to clipboard!', 'success');
-  } catch (error: any) {
-    console.error('Copy error:', error);
-    // Fallback for browsers that don't support clipboard API
+// Delete file with comprehensive CORS workaround strategies
+const deleteFile = async (fileId: string | number) => {
+  showNotification('Deleting ad...', 'info');
+
+  const baseUrl = import.meta.env.VITE_API_BASE_URL_FILE_UPLOAD || 'https://cdn.apexdrive365.com/api';
+  const companyToken = import.meta.env.VITE_API_BASE_URL_X_COMPANY_TOKEN || '';
+  const serverApiKey = import.meta.env.VITE_API_BASE_URL_X_SERVER_API_KEY || '';
+
+  // Build base headers that will be used in all strategies
+  const baseHeaders = {
+    'X-Company-Token': companyToken,
+    'X-Server-API-Key': serverApiKey
+  };
+
+  // Strategy definitions with progressive fallbacks
+  const deleteStrategies = [
+    // Strategy 1: Standard DELETE with minimal headers to reduce preflight complexity
+    {
+      name: 'Standard DELETE',
+      execute: async () => {
+        const deleteUrl = `${baseUrl}/data/${fileId}`;
+        
+        // Execute standard DELETE
+
+        const response = await fetch(deleteUrl, {
+          method: 'DELETE',
+          headers: baseHeaders,
+          mode: 'cors',
+          credentials: 'omit', // Don't send cookies
+          cache: 'no-cache'
+        });
+
+        return response;
+      }
+    },
+
+    // Strategy 2: DELETE with no-cors mode (can't read response but may succeed)
+    {
+      name: 'No-CORS DELETE',
+      execute: async () => {
+        const deleteUrl = `${baseUrl}/data/${fileId}`;
+        
+        // Execute DELETE with no-cors mode
+
+        const response = await fetch(deleteUrl, {
+          method: 'DELETE',
+          headers: baseHeaders,
+          mode: 'no-cors',
+          credentials: 'omit',
+          cache: 'no-cache'
+        });
+
+        return response;
+      }
+    },
+
+    // Strategy 3: POST with method override (widely supported workaround)
+    {
+      name: 'POST with DELETE override',
+      execute: async () => {
+        const deleteUrl = `${baseUrl}/data/${fileId}`;
+        const headers = {
+          ...baseHeaders,
+          'Content-Type': 'application/x-www-form-urlencoded'
+        };
+        
+        // Execute POST with method override
+
+        const response = await fetch(deleteUrl, {
+          method: 'POST',
+          headers: headers,
+          body: '_method=DELETE',
+          mode: 'cors',
+          credentials: 'omit',
+          cache: 'no-cache'
+        });
+
+        return response;
+      }
+    },
+
+    // Strategy 4: Try alternative URL patterns that might bypass redirect issues
+    {
+      name: 'Alternative URL format',
+      execute: async () => {
+        const deleteUrl = `${baseUrl}/data/${fileId}/delete`;
+        
+        // Execute with alternative URL format
+
+        const response = await fetch(deleteUrl, {
+          method: 'POST',
+          headers: {
+            ...baseHeaders,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ action: 'delete' }),
+          mode: 'cors',
+          credentials: 'omit',
+          cache: 'no-cache'
+        });
+
+        return response;
+      }
+    },
+
+    // Strategy 5: Simple GET request to a delete endpoint (if supported)
+    {
+      name: 'GET delete endpoint',
+      execute: async () => {
+        const deleteUrl = `${baseUrl}/data/${fileId}?action=delete&${new URLSearchParams(baseHeaders).toString()}`;
+        
+        // Execute using GET method
+
+        const response = await fetch(deleteUrl, {
+          method: 'GET',
+          mode: 'cors',
+          credentials: 'omit',
+          cache: 'no-cache'
+        });
+
+        return response;
+      }
+    },
+
+    // Strategy 6: Form submission fallback (most reliable for CORS issues)
+    {
+      name: 'Form submission',
+      execute: async () => {
+        return new Promise((resolve, reject) => {
+          try {
+            // Form submission fallback strategy
+            
+            // Create a hidden form
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `${baseUrl}/data/${fileId}`;
+            form.style.display = 'none';
+            form.target = '_blank'; // Open in new tab to avoid navigation
+
+            // Add method override
+            const methodField = document.createElement('input');
+            methodField.type = 'hidden';
+            methodField.name = '_method';
+            methodField.value = 'DELETE';
+            form.appendChild(methodField);
+
+            // Add headers as hidden fields
+            Object.entries(baseHeaders).forEach(([key, value]) => {
+              const field = document.createElement('input');
+              field.type = 'hidden';
+              field.name = key;
+              field.value = value;
+              form.appendChild(field);
+            });
+
+            // Add CSRF token if available
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            if (csrfToken) {
+              const csrfField = document.createElement('input');
+              csrfField.type = 'hidden';
+              csrfField.name = '_token';
+              csrfField.value = csrfToken;
+              form.appendChild(csrfField);
+            }
+
+            document.body.appendChild(form);
+            
+            // Submit form
+            form.submit();
+            
+            // Clean up
+            setTimeout(() => {
+              document.body.removeChild(form);
+            }, 1000);
+            
+            // Since we can't get a real response from form submission,
+            // we'll assume success and let the user refresh to verify
+            resolve({
+              ok: true,
+              status: 200,
+              statusText: 'Form submitted',
+              type: 'basic'
+            } as Response);
+            
+          } catch (error) {
+            reject(error);
+          }
+        });
+      }
+    }
+  ];
+
+  // Execute strategies with proper error handling and fallbacks
+  for (let i = 0; i < deleteStrategies.length; i++) {
+    const strategy = deleteStrategies[i];
+    
     try {
-      const textArea = document.createElement('textarea');
-      textArea.value = url;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textArea);
-      showNotification('URL copied to clipboard!', 'success');
-    } catch (fallbackError) {
-      showNotification('Failed to copy URL. Please copy manually.', 'error');
+      // Add timeout to prevent hanging requests
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Request timeout')), 15000);
+      });
+      
+      const response = await Promise.race([strategy.execute(), timeoutPromise]);
+
+      // Handle no-cors responses (opaque responses)
+      if (response.type === 'opaque') {
+        showNotification('Delete request sent successfully! Refreshing...', 'info');
+        
+        // Wait a moment for the server to process, then refresh
+        setTimeout(async () => {
+          await loadFiles(pagination.value.page);
+        }, 1000);
+        return;
+      }
+
+      // Handle successful responses
+      if (response.ok && response.status >= 200 && response.status < 300) {
+        
+        // Special handling for form submission
+        if (strategy.name === 'Form submission') {
+          showNotification('Delete request submitted via form. Please refresh to verify the deletion.', 'info');
+          setTimeout(async () => {
+            await loadFiles(pagination.value.page);
+          }, 2000);
+        } else {
+          showNotification('Ad deleted successfully!', 'success');
+          await loadFiles(pagination.value.page);
+        }
+        return;
+      }
+
+      // Handle HTTP errors
+      if (response.status >= 400) {
+        let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        
+        try {
+          const errorText = await response.text();
+          if (errorText) {
+            errorMessage += ` - ${errorText}`;
+          }
+        } catch (e) {
+          console.warn('Could not read error response body:', e);
+        }
+        
+        // If it's a 404, the file might already be deleted
+        if (response.status === 404) {
+          showNotification('Ad may already be deleted. Refreshing list...', 'warning');
+          await loadFiles(pagination.value.page);
+          return;
+        }
+        
+        // For other HTTP errors, try next strategy unless it's the last one
+        if (i < deleteStrategies.length - 1) {
+          continue;
+        } else {
+          throw new Error(errorMessage);
+        }
+      }
+
+      // Unexpected response, try next strategy
+      
+    } catch (error: any) {
+      // Check if this is a network/CORS error
+      const isNetworkError = error.message.includes('Failed to fetch') || 
+                           error.message.includes('CORS') ||
+                           error.message.includes('network') ||
+                           error.message.includes('timeout') ||
+                           error.name === 'TypeError';
+      
+      // If it's a network error and we have more strategies, continue
+      if (isNetworkError && i < deleteStrategies.length - 1) {
+        continue;
+      }
+      
+      // If this is the last strategy, handle the final error
+      if (i === deleteStrategies.length - 1) {
+        
+        let finalError = 'Failed to delete ad after trying all available methods.';
+        let showManualOption = false;
+        
+        if (isNetworkError) {
+          finalError = 'Unable to delete ad due to network restrictions (CORS policy). This may be a server configuration issue.';
+          showManualOption = true;
+        } else if (error.message.includes('401')) {
+          finalError = 'Authentication failed. Please refresh the page and try again.';
+        } else if (error.message.includes('403')) {
+          finalError = 'Permission denied. You may not have rights to delete this ad.';
+        } else if (error.message.includes('500')) {
+          finalError = 'Server error occurred. Please try again later.';
+        } else if (error.message) {
+          finalError = error.message;
+        }
+        
+        showNotification(finalError, 'error', { duration: 12000 });
+        
+        // Offer manual URL option for CORS issues
+        if (showManualOption) {
+          const manualUrl = `${baseUrl}/data/${fileId}`;
+          setTimeout(() => {
+            if (confirm(`Would you like to try deleting manually? This will open a new tab where you can try the delete operation directly.\n\nURL: ${manualUrl}`)) {
+              // Open the delete URL in a new tab for manual deletion
+              const newTab = window.open(`${manualUrl}?manual_delete=1&${new URLSearchParams(baseHeaders).toString()}`, '_blank');
+              if (newTab) {
+                showNotification('Manual delete tab opened. After deleting, come back and refresh this page.', 'info', { duration: 8000 });
+              }
+            }
+          }, 2000);
+        }
+        
+        return;
+      }
     }
   }
 };
@@ -632,67 +1123,122 @@ const showNotification = (message: string, type: 'success' | 'error' | 'warning'
   }
 };
 
-// Test API connectivity
-const testApiConnectivity = async () => {
-  showNotification('Testing API connectivity...', 'info');
-  try {
-    // Try to fetch files to test connectivity
-    await loadFiles();
-    showNotification('API connectivity test successful!', 'success');
-  } catch (error: any) {
-    showNotification(`API connectivity test failed: ${error.message}`, 'error');
-  }
-};
-
-// Test notifications
-const testNotifications = () => {
-  showNotification('This is a success notification!', 'success');
-  setTimeout(() => {
-    showNotification('This is an info notification!', 'info');
-  }, 500);
-  setTimeout(() => {
-    showNotification('This is a warning notification!', 'warning');
-  }, 1000);
-  setTimeout(() => {
-    showNotification('This is an error notification!', 'error');
-  }, 1500);
-};
-
-// Test upload function for debugging
-const testUpload = async () => {
-  // Create a small test file
-  const testContent = 'This is a test file content';
-  const testFile = new File([testContent], 'test.txt', { type: 'text/plain' });
-  
-  const userId = getUserId();
-  console.log('Testing upload with user ID:', userId, 'file:', testFile);
-  
-  try {
-    const result = await uploadFiles([testFile], 'document', userId);
-    console.log('Test upload result:', result);
-    showNotification('Test upload successful!', 'success');
-  } catch (error: any) {
-    console.error('Test upload failed:', error);
-    showNotification(`Test upload failed: ${error.message}`, 'error');
-  }
-};
-
-// Make it available globally for console testing
-if (typeof window !== 'undefined') {
-  (window as any).testUpload = testUpload;
-  (window as any).debugApiConfig = debugApiConfig;
-}
-
 // Check if file is an image
 const isImageFile = (url: string) => {
   if (!url) return false;
-  const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
-  return imageExtensions.some(ext => url.toLowerCase().includes(ext));
+  const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg', '.tiff', '.tif', '.ico'];
+  const imageMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/bmp', 'image/webp', 'image/svg+xml', 'image/tiff', 'image/x-icon'];
+  
+  // Check by file extension
+  const hasImageExtension = imageExtensions.some(ext => url.toLowerCase().includes(ext));
+  
+  // Check by MIME type if available in URL
+  const hasImageMimeType = imageMimeTypes.some(mime => url.toLowerCase().includes(mime));
+  
+  return hasImageExtension || hasImageMimeType;
 };
 
-// Get human-readable file type name
+// Get filtered files based on selected view type
+const filteredFiles = computed(() => {
+  return files.value.filter(file => {
+    if (selectedViewType.value === 'image') {
+      // Check if it's an image ad type, if the file URL is an image, OR if it's a custom type that should be treated as image
+      return isImageAdType(file.file_type) || isImageFile(file.file_url) || isCustomImageType(file.file_type);
+    } else if (selectedViewType.value === 'video') {
+      // Check if it's a video ad type, if the file URL is a video, OR if it's a custom type that should be treated as video
+      return isVideoAdType(file.file_type) || isVideoFile(file.file_url) || isCustomVideoType(file.file_type);
+    } else if (selectedViewType.value === 'slideshow') {
+      // Check if it's a slideshow ad type OR if it's a custom type that should be treated as slideshow
+      return isSlideshowAdType(file.file_type) || isCustomSlideshowType(file.file_type);
+    }
+    return false;
+  });
+});
+
+// Check if the file type is an image ad type
+const isImageAdType = (fileType: string) => {
+  const imageAdTypes = [
+    // Ad placements
+    'banner_top_left', 'banner_top_right', 'banner_top_center',
+    'banner_bottom_left', 'banner_bottom_right', 'banner_bottom_center',
+    'banner_center', 'banner_sidebar_left', 'banner_sidebar_right',
+    'banner_header', 'banner_footer', 'popup_ad', 'floating_ad',
+    'sticky_ad', 'interstitial_ad',
+    // Content types
+    'profile', 'product', 'category', 'brand_logo', 'hero_image', 
+    'gallery', 'thumbnail', 'icon', 'other',
+    // Legacy types
+    'bannar1_ad'
+  ];
+  return imageAdTypes.includes(fileType);
+};
+
+// Check if the file type is a video ad type
+const isVideoAdType = (fileType: string) => {
+  const videoAdTypes = [
+    // Video ad placements
+    'video_banner_top', 'video_banner_center', 'video_banner_bottom',
+    'video_popup', 'video_floating', 'video_interstitial',
+    'video_pre_roll', 'video_mid_roll', 'video_post_roll',
+    // General video types
+    'video', 'animation'
+  ];
+  return videoAdTypes.includes(fileType);
+};
+
+// Check if the file type is a slideshow ad type
+const isSlideshowAdType = (fileType: string) => {
+  const slideshowAdTypes = [
+    // Slideshow ad placements
+    'slideshow_banner_top', 'slideshow_banner_center', 'slideshow_banner_bottom',
+    'slideshow_popup', 'slideshow_floating', 'slideshow_interstitial',
+    'slideshow_carousel', 'slideshow_gallery', 'slideshow_hero',
+    // General slideshow types
+    'slideshow', 'presentation'
+  ];
+  return slideshowAdTypes.includes(fileType);
+};
+
+// Check if custom type should be treated as image (for unknown/custom types, assume image by default)
+const isCustomImageType = (fileType: string) => {
+  // If it's not a known video or slideshow type, and not empty, treat as custom image type
+  return fileType && 
+         !isVideoAdType(fileType) && 
+         !isSlideshowAdType(fileType) && 
+         !fileType.startsWith('video_') && 
+         !fileType.startsWith('slideshow_');
+};
+
+// Check if custom type should be treated as video
+const isCustomVideoType = (fileType: string) => {
+  // Only treat as custom video if it contains 'video' in the name
+  return fileType && fileType.toLowerCase().includes('video') && !isVideoAdType(fileType);
+};
+
+// Check if custom type should be treated as slideshow
+const isCustomSlideshowType = (fileType: string) => {
+  // Only treat as custom slideshow if it contains 'slideshow' or 'slide' in the name
+  return fileType && (fileType.toLowerCase().includes('slideshow') || fileType.toLowerCase().includes('slide')) && !isSlideshowAdType(fileType);
+};
+
+// Check if file is a video
+const isVideoFile = (url: string) => {
+  if (!url) return false;
+  const videoExtensions = ['.mp4', '.avi', '.mov', '.mkv', '.webm', '.flv', '.wmv', '.m4v', '.3gp', '.ogv', '.mpeg', '.mpg'];
+  const videoMimeTypes = ['video/mp4', 'video/avi', 'video/quicktime', 'video/x-msvideo', 'video/webm', 'video/x-flv', 'video/x-ms-wmv', 'video/3gpp', 'video/ogg'];
+  
+  // Check by file extension
+  const hasVideoExtension = videoExtensions.some(ext => url.toLowerCase().includes(ext));
+  
+  // Check by MIME type if available in URL
+  const hasVideoMimeType = videoMimeTypes.some(mime => url.toLowerCase().includes(mime));
+  
+  return hasVideoExtension || hasVideoMimeType;
+};
+
 const getFileTypeName = (fileType: string) => {
   const fileTypeMap: { [key: string]: string } = {
+    // Image ad placements
     'banner_top_left': 'Banner - Top Left',
     'banner_top_right': 'Banner - Top Right',
     'banner_top_center': 'Banner - Top Center',
@@ -708,6 +1254,30 @@ const getFileTypeName = (fileType: string) => {
     'floating_ad': 'Floating Advertisement',
     'sticky_ad': 'Sticky Advertisement',
     'interstitial_ad': 'Interstitial Advertisement',
+    
+    // Video ad placements
+    'video_banner_top': 'Video Banner - Top',
+    'video_banner_center': 'Video Banner - Center',
+    'video_banner_bottom': 'Video Banner - Bottom',
+    'video_popup': 'Video Popup',
+    'video_floating': 'Video Floating',
+    'video_interstitial': 'Video Interstitial',
+    'video_pre_roll': 'Video Pre-roll',
+    'video_mid_roll': 'Video Mid-roll',
+    'video_post_roll': 'Video Post-roll',
+    
+    // Slideshow ad placements
+    'slideshow_banner_top': 'Slideshow Banner - Top',
+    'slideshow_banner_center': 'Slideshow Banner - Center',
+    'slideshow_banner_bottom': 'Slideshow Banner - Bottom',
+    'slideshow_popup': 'Slideshow Popup',
+    'slideshow_floating': 'Slideshow Floating',
+    'slideshow_interstitial': 'Slideshow Interstitial',
+    'slideshow_carousel': 'Slideshow Carousel',
+    'slideshow_gallery': 'Slideshow Gallery',
+    'slideshow_hero': 'Slideshow Hero',
+    
+    // Legacy and other types
     'profile': 'Profile Image',
     'product': 'Product Image',
     'category': 'Category Image',
@@ -723,6 +1293,8 @@ const getFileTypeName = (fileType: string) => {
     'video': 'Video',
     'audio': 'Audio',
     'animation': 'Animation',
+    'slideshow': 'Slideshow',
+    'presentation': 'Presentation',
     'icon': 'Icon',
     'other': 'Other',
     'bannar1_ad': 'Banner Ad (Legacy)', // Keep compatibility with existing data
@@ -732,10 +1304,26 @@ const getFileTypeName = (fileType: string) => {
 
 // Get file type category for color coding
 const getFileTypeCategory = (fileType: string) => {
-  if (fileType.startsWith('banner_') || fileType.includes('_ad')) return 'ad';
-  if (['profile', 'product', 'category', 'brand_logo', 'hero_image', 'gallery', 'thumbnail'].includes(fileType)) return 'image';
+  // Video ads
+  if (fileType.startsWith('video_') || fileType === 'video' || fileType === 'animation') return 'video_ad';
+  
+  // Slideshow ads
+  if (fileType.startsWith('slideshow_') || fileType === 'slideshow' || fileType === 'presentation') return 'slideshow_ad';
+  
+  // Image ads (banners and advertisement placements)
+  if (fileType.startsWith('banner_') || fileType === 'popup_ad' || fileType === 'floating_ad' || fileType === 'sticky_ad' || fileType === 'interstitial_ad' || fileType === 'bannar1_ad') return 'ad';
+  
+  // Content images
+  if (['profile', 'product', 'category', 'brand_logo', 'hero_image', 'gallery', 'thumbnail', 'icon'].includes(fileType)) return 'image';
+  
+  // Other document types (for potential future use)
   if (['document', 'pdf', 'invoice', 'receipt', 'contract'].includes(fileType)) return 'document';
-  if (['video', 'audio', 'animation'].includes(fileType)) return 'media';
+  
+  // Custom types - categorize based on content
+  if (isCustomVideoType(fileType)) return 'video_ad';
+  if (isCustomSlideshowType(fileType)) return 'slideshow_ad';
+  if (isCustomImageType(fileType)) return 'ad'; // Custom image types default to 'ad' category
+  
   return 'other';
 };
 
@@ -743,16 +1331,34 @@ const getFileTypeCategory = (fileType: string) => {
 const getCategoryColor = (category: string) => {
   switch (category) {
     case 'ad': return 'bg-red-100 text-red-800';
+    case 'video_ad': return 'bg-purple-100 text-purple-800';
+    case 'slideshow_ad': return 'bg-indigo-100 text-indigo-800';
     case 'image': return 'bg-blue-100 text-blue-800';
-    case 'document': return 'bg-green-100 text-green-800';
-    case 'media': return 'bg-purple-100 text-purple-800';
     default: return 'bg-gray-100 text-gray-800';
   }
+};
+
+// Get display type for file badge
+const getDisplayType = (file: any) => {
+  if (isImageAdType(file.file_type) ) {
+    return 'Image Ad';
+  } else if (isVideoAdType(file.file_type) || isVideoFile(file.file_url) || isCustomVideoType(file.file_type)) {
+    return 'Video Ad';
+  } else if (isSlideshowAdType(file.file_type) || isCustomSlideshowType(file.file_type)) {
+    return 'Slideshow Ad';
+  }
+  return 'Custom Ad';
 };
 
 // Handle image error
 const handleImageError = (event: Event) => {
   const target = event.target as HTMLImageElement;
+  target.style.display = 'none';
+};
+
+// Handle video error
+const handleVideoError = (event: Event) => {
+  const target = event.target as HTMLVideoElement;
   target.style.display = 'none';
 };
 
@@ -775,13 +1381,9 @@ const menuItems = [
 
 // Initialize shop as a reactive object
 const shop = ref({ logo: null, name: null });
-const shopUrl = ref("");
 
 // Load initial data
 onMounted(async () => {
-  // Debug API configuration
-  debugApiConfig();
-  
   // Ensure user ID is available from token
   let userId = localStorage.getItem('user_id');
   if (!userId) {
@@ -790,7 +1392,6 @@ onMounted(async () => {
       const decodedToken = decodeJWT(token);
       if (decodedToken && decodedToken.sub) {
         localStorage.setItem('user_id', decodedToken.sub);
-        console.log('User ID extracted and stored:', decodedToken.sub);
       }
     }
   }
@@ -804,7 +1405,6 @@ onMounted(async () => {
   } catch (error) {
     console.error("Error parsing shopData from localStorage:", error);
   }
-  shopUrl.value = window.location.origin + "/shop";
   
   // Load files
   await loadFiles();

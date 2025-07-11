@@ -121,33 +121,58 @@
             </template>
 
           <!-- Pagination -->
-          <div class="mt-4 flex justify-center items-center space-x- pb-6"
+          <div class="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4 pb-6 p-10"
             v-if="!loading && !error && customers.length > 0">
-            <button @click="previousPage" :disabled="currentPage <= 1"
-              class="px-4 py-2 border rounded-md text-white bg-blue-500 hover:bg-blue-700 disabled:opacity-50">
-              Previous
-            </button>
-
-            <div class="flex items-center space-x-2">
-              <span class="mx-2">
-                Page {{ currentPage }} of {{ lastPage }}
-              </span>
-              <span class="text-gray-500">
-                (Total items: {{ totalItems }})
-              </span>
+            <!-- Pagination Info -->
+            <div class="text-sm text-gray-700">
+              Showing {{ ((currentPage - 1) * itemsPerPage) + 1 }} to {{ Math.min(currentPage * itemsPerPage, totalItems) }} of {{ totalItems }} withdrawal requests
             </div>
-
-            <button @click="nextPage" :disabled="currentPage >= lastPage"
-              class="px-4 py-2 border rounded-md text-white bg-blue-500 hover:bg-blue-700 disabled:opacity-50 ml-4">
-              Next
-            </button>
-
-            <!-- Optional: Add items per page selector -->
-            <select v-model="itemsPerPage" class="ml-4 px-2 py-1 border rounded-md">
-              <option :value="10">10 per page</option>
-              <option :value="20">20 per page</option>
-              <option :value="50">50 per page</option>
-            </select>
+            
+            <!-- Pagination Controls -->
+            <nav class="flex items-center space-x-2">
+              <button
+                @click="previousPage"
+                :disabled="currentPage <= 1"
+                class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Previous
+              </button>
+              
+              <!-- Page numbers -->
+              <template v-for="pageNum in getVisiblePages()" :key="pageNum">
+                <button
+                  v-if="pageNum !== '...'"
+                  @click="changePage(pageNum)"
+                  :class="[
+                    'px-3 py-2 text-sm font-medium rounded-md',
+                    pageNum === currentPage
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50'
+                  ]"
+                >
+                  {{ pageNum }}
+                </button>
+                <span v-else class="px-3 py-2 text-sm text-gray-500">...</span>
+              </template>
+              
+              <button
+                @click="nextPage"
+                :disabled="currentPage >= lastPage"
+                class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
+              
+              <!-- Items per page selector -->
+              <select 
+                v-model="itemsPerPage" 
+                class="ml-2 px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                <option :value="10">10 per page</option>
+                <option :value="20">20 per page</option>
+                <option :value="50">50 per page</option>
+              </select>
+            </nav>
           </div>
           </div>
         </div>
@@ -278,6 +303,53 @@ const refreshData = async () => {
   return await fetchCustomers(currentPage.value, true);
 };
 
+// Get visible page numbers for pagination
+const getVisiblePages = () => {
+  const totalPages = lastPage.value;
+  const currentPageValue = currentPage.value;
+  const pages = [];
+  
+  if (totalPages <= 9) {
+    // Show all pages if 9 or fewer
+    for (let i = 1; i <= totalPages; i++) {
+      pages.push(i);
+    }
+  } else {
+    // Always show first page
+    pages.push(1);
+    
+    if (currentPageValue > 5) {
+      pages.push('...');
+    }
+    
+    // Show more pages around current page
+    const start = Math.max(2, currentPageValue - 2);
+    const end = Math.min(totalPages - 1, currentPageValue + 2);
+    
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    
+    if (currentPageValue < totalPages - 4) {
+      pages.push('...');
+    }
+    
+    // Always show last page
+    if (totalPages > 1) {
+      pages.push(totalPages);
+    }
+  }
+  
+  return pages;
+};
+
+// Change page function
+const changePage = async (newPage) => {
+  if (newPage >= 1 && newPage <= lastPage.value) {
+    await fetchCustomers(newPage);
+  }
+};
+
 // Update the navigation methods
 const nextPage = async () => {
   console.log('Current page:', currentPage.value, 'Last page:', lastPage.value);
@@ -384,10 +456,9 @@ const handleLogout = () => {
   window.location.href = '/';
 };
 
-// Add a watcher for itemsPerPage changes
+// Watch for itemsPerPage changes
 watch(itemsPerPage, async (newValue) => {
-  console.log('Items per page changed to:', newValue);
-  currentPage.value = 1; // Reset to first page when changing items per page
+  // Reset to first page and fetch with new items per page
   await fetchCustomers(1);
 });
 
