@@ -113,7 +113,7 @@
                       </div>
                       <div class="ml-4">
                         <div class="text-sm font-medium text-gray-900">{{ customer.name }}</div>
-                        <div class="text-xs text-gray-500" v-if="customer.created_at">Created: {{ formatDate(customer.created_at) }}</div>
+                        <div class="text-xs text-gray-500" v-if="customer.created_at">Created: {{ customer.created_at }}</div>
                       </div>
                     </div>
                   </td>
@@ -127,9 +127,14 @@
                     {{ customer.address || 'N/A' }}
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm">
-                    <button @click="openEditModal(customer)" class="inline-flex items-center px-3 py-1.5 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                      <span>Edit</span>
-                    </button>
+                    <div class="flex space-x-2">
+                      <button @click="openEditModal(customer)" class="inline-flex items-center px-3 py-1.5 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <span>Edit</span>
+                      </button>
+                      <button @click="openDetailsModal(customer)" class="inline-flex items-center px-3 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                        <span>Details</span>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               </tbody>
@@ -152,38 +157,140 @@
           </div>
 
           <!-- Pagination -->
-          <div class="mt-4 flex justify-center items-center space-x-4"
+          <div class="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4"
             v-if="!loading && !error && customers.length > 0">
-            <button @click="previousPage" :disabled="currentPage <= 1"
-              class="px-4 py-2 border rounded-md text-white bg-blue-500 hover:bg-blue-700 disabled:opacity-50">
-              Previous
-            </button>
-
-            <div class="flex items-center space-x-2">
-              <span class="mx-2">
-                Page {{ currentPage }} of {{ totalPages }}
-              </span>
-              <span class="text-gray-500">
-                (Total items: {{ totalItems }})
-              </span>
+            <!-- Pagination Info -->
+            <div class="text-sm text-gray-700">
+              Showing {{ ((currentPage - 1) * itemsPerPage) + 1 }} to {{ Math.min(currentPage * itemsPerPage, totalItems) }} of {{ totalItems }} customers
             </div>
+            
+            <!-- Pagination Controls -->
+            <nav class="flex items-center space-x-2">
+              <button
+                @click="previousPage"
+                :disabled="currentPage <= 1"
+                class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Previous
+              </button>
+              
+              <!-- Page numbers -->
+              <template v-for="pageNum in getVisiblePages()" :key="pageNum">
+                <button
+                  v-if="pageNum !== '...'"
+                  @click="changePage(pageNum)"
+                  :class="[
+                    'px-3 py-2 text-sm font-medium rounded-md',
+                    pageNum === currentPage
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50'
+                  ]"
+                >
+                  {{ pageNum }}
+                </button>
+                <span v-else class="px-3 py-2 text-sm text-gray-500">...</span>
+              </template>
+              
+              <button
+                @click="nextPage"
+                :disabled="currentPage >= totalPages"
+                class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
 
-            <button @click="nextPage" :disabled="currentPage >= totalPages"
-              class="px-4 py-2 border rounded-md text-white bg-blue-500 hover:bg-blue-700 disabled:opacity-50">
-              Next
-            </button>
-
-            <!-- Optional: Add items per page selector -->
-            <select v-model="itemsPerPage" class="ml-4 px-2 py-1 border rounded-md">
-              <option :value="10">10 per page</option>
-              <option :value="20">20 per page</option>
-              <option :value="50">50 per page</option>
-            </select>
+              <!-- Items per page selector -->
+              <select 
+                v-model="itemsPerPage" 
+                class="ml-2 px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                <option :value="10">10 per page</option>
+                <option :value="20">20 per page</option>
+                <option :value="50">50 per page</option>
+              </select>
+            </nav>
           </div>
         </div>
 
       </main>
 
+      <!-- Customer Details Modal -->
+      <div v-if="showDetailsModal" 
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl transform transition-all">
+          <!-- Modal Header -->
+          <div class="bg-gradient-to-r from-green-600 to-green-800 text-white px-6 py-4 rounded-t-lg flex justify-between items-center">
+            <h2 class="text-2xl font-bold">Customer Details</h2>
+            <button @click="closeDetailsModal" class="text-white hover:text-red-200 transition-colors">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Modal Body -->
+          <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="col-span-2">
+                <div class="flex items-center justify-center mb-4">
+                  <div class="h-24 w-24 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 text-3xl font-semibold">
+                    {{ selectedCustomer?.name ? selectedCustomer.name.charAt(0).toUpperCase() : '?' }}
+                  </div>
+                </div>
+                <h3 class="text-2xl font-bold text-center text-gray-800 mb-4">{{ selectedCustomer?.name }}</h3>
+              </div>
+              
+              <div class="border-b pb-2">
+                <p class="text-sm text-gray-500">ID</p>
+                <p class="font-medium">{{ selectedCustomer?.id || 'N/A' }}</p>
+              </div>
+              
+              <div class="border-b pb-2">
+                <p class="text-sm text-gray-500">Phone</p>
+                <p class="font-medium">{{ selectedCustomer?.phone || 'N/A' }}</p>
+              </div>
+              
+              <div class="border-b pb-2">
+                <p class="text-sm text-gray-500">Email</p>
+                <p class="font-medium">{{ selectedCustomer?.email || 'N/A' }}</p>
+              </div>
+              
+              <div class="border-b pb-2">
+                <p class="text-sm text-gray-500">NID</p>
+                <p class="font-medium">{{ selectedCustomer?.nid || 'N/A' }}</p>
+              </div>
+              
+              <div class="border-b pb-2">
+                <p class="text-sm text-gray-500">Address</p>
+                <p class="font-medium">{{ selectedCustomer?.address || 'N/A' }}</p>
+              </div>
+              
+              <div class="border-b pb-2">
+                <p class="text-sm text-gray-500">Balance</p>
+                <p class="font-medium text-green-600">{{ selectedCustomer?.balance ? `$${selectedCustomer.balance}` : 'N/A' }}</p>
+              </div>
+              
+              <div class="border-b pb-2">
+                <p class="text-sm text-gray-500">Referral Code</p>
+                <p class="font-medium">{{ selectedCustomer?.referral_code || 'N/A' }}</p>
+              </div>
+              
+              <div class="border-b pb-2">
+                <p class="text-sm text-gray-500">Created At</p>
+                <p class="font-medium">{{ selectedCustomer?.created_at || 'N/A' }}</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Modal Footer -->
+          <div class="bg-gray-50 px-6 py-4 rounded-b-lg flex justify-end">
+            <button @click="closeDetailsModal" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors">
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+      
       <!-- Create/Edit Customer Modal -->
       <div v-if="showModal"
         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
@@ -232,13 +339,7 @@
                   placeholder="Enter address">
               </div>
 
-              <!-- Role Field -->
-              <div class="form-group">
-                <label for="role" class="label-style">Role</label>
-                <select id="role" v-model="modalCustomer.role" class="select-style">
-                  <option value="customer">Customer</option>
-                </select>
-              </div>
+
 
               <!-- Wallet Balance Field -->
               <div class="form-group">
@@ -315,25 +416,22 @@
       </div>
     </div>
   </div>
+  
+  <!-- Notification Container -->
+  <NotificationContainer />
 </template>
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import { debounce } from 'lodash-es';
+import { debounce } from 'lodash-es'
+import { useNotificationStore } from '@/stores/useNotificationStore'
 
 // Menu items definition
 const menuItems = [
-  // { name: "Dashboard", path: "/dashboard", icon: "LayoutDashboard" },
-  // { name: "Products", path: "/products", icon: "Package" },
-  // { name: "Orders", path: "/orders", icon: "ShoppingCart" },
   { name: "Customers", path: "/customers", icon: "Users" },
-  // { name: "Reports", path: "/reports", icon: "BarChart" },
-  // { name: "Manage Shop", path: "/manageShop", icon: "Settings" },
-  // { name: "Cupon", path: "/cupon", icon: "Tag" },
-  // { name: "Invoicing", path: "/invoicing", icon: "FileText" },
   { name: "Lucky Spin", path: "/luckyspin", icon: "Award" },
   { name: "Leaderboard", path: "/leaderboard", icon: "Trophy" },
-  { name: "Billing", path: "/billing", icon: "CreditCard" },
+  { name: "Withdraw", path: "/withdraw", icon: "CreditCard" },
   { 
     name: "Transactions", 
     icon: "DollarSign",
@@ -342,13 +440,17 @@ const menuItems = [
       { name: "User Transactions", path: "/user-transactions", icon: "FileText" }
     ]
   },
+  { name: "Ads", path: "/ads", icon: "CreditCard" },
 ];
-// ...existing code...
 
 // Add token handling function
 const getToken = () => {
   const token = localStorage.getItem('token');
   if (!token) {
+    showNotification('Authentication token not found. Please login again.', 'error');
+    setTimeout(() => {
+      window.location.href = '/';
+    }, 2000);
     throw new Error('No authentication token found');
   }
   return token;
@@ -382,6 +484,8 @@ const debouncedSearch = debounce(async () => {
 
 // Modal state
 const showModal = ref(false);
+const showDetailsModal = ref(false);
+const selectedCustomer = ref(null);
 const editingCustomer = ref(null);
 const modalCustomer = ref({
   name: '',
@@ -398,6 +502,14 @@ const modalCustomer = ref({
 // Add these to your existing refs
 const showPassword = ref(false);
 const formErrors = ref({});
+
+// Notification store
+const notificationStore = useNotificationStore();
+
+// Notification helper function
+const showNotification = (message, type = 'info', options = {}) => {
+  notificationStore.addNotification(message, type, options?.duration || 5000, options);
+};
 
 // Update these refs for pagination
 const currentPage = ref(1);
@@ -430,7 +542,10 @@ const fetchCustomers = async (page = 1) => {
 
     if (response.status === 401) {
       localStorage.removeItem('token');
-      window.location.href = '/'; // Redirect to login
+      showNotification('Session expired. Please login again.', 'error');
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 2000);
       throw new Error('Session expired. Please login again.');
     }
 
@@ -445,19 +560,14 @@ const fetchCustomers = async (page = 1) => {
       lastPage.value = Math.ceil(data.data.meta.total / itemsPerPage.value);
       currentPage.value = parseInt(data.data.meta.page);
 
-      // Debug log
-      console.log('Pagination Info:', {
-        currentPage: currentPage.value,
-        totalPages: lastPage.value,
-        totalItems: totalItems.value,
-        itemsPerPage: itemsPerPage.value
-      });
+      // Pagination info successfully loaded
     } else {
       throw new Error('Failed to fetch customers');
     }
   } catch (e) {
     error.value = e.message;
     console.error("Error fetching customers:", e);
+    showNotification(e.message || 'Failed to fetch customers', 'error');
   } finally {
     loading.value = false;
   }
@@ -468,23 +578,70 @@ const totalPages = computed(() => lastPage.value);
 
 const paginatedCustomers = computed(() => customers.value);
 
+// Get visible page numbers for pagination
+const getVisiblePages = () => {
+  const totalPages = lastPage.value;
+  const currentPageValue = currentPage.value;
+  const pages = [];
+  
+  if (totalPages <= 9) {
+    // Show all pages if 9 or fewer
+    for (let i = 1; i <= totalPages; i++) {
+      pages.push(i);
+    }
+  } else {
+    // Always show first page
+    pages.push(1);
+    
+    if (currentPageValue > 5) {
+      pages.push('...');
+    }
+    
+    // Show more pages around current page
+    const start = Math.max(2, currentPageValue - 2);
+    const end = Math.min(totalPages - 1, currentPageValue + 2);
+    
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    
+    if (currentPageValue < totalPages - 4) {
+      pages.push('...');
+    }
+    
+    // Always show last page
+    if (totalPages > 1) {
+      pages.push(totalPages);
+    }
+  }
+  
+  return pages;
+};
+
+// Change page function
+const changePage = async (newPage) => {
+  if (newPage >= 1 && newPage <= totalPages.value) {
+    await fetchCustomers(newPage);
+  }
+};
+
 const previousPage = async () => {
   if (currentPage.value > 1) {
-    console.log('Moving to previous page:', currentPage.value - 1);
+    // Move to previous page
     await fetchCustomers(currentPage.value - 1);
   }
 };
 
 const nextPage = async () => {
   if (currentPage.value < totalPages.value) {
-    console.log('Moving to next page:', currentPage.value + 1);
+    // Move to next page
     await fetchCustomers(currentPage.value + 1);
   }
 };
 
 // Add a watcher for itemsPerPage changes
 watch(itemsPerPage, async (newValue) => {
-  console.log('Items per page changed to:', newValue);
+  // Update items per page
   await fetchCustomers(1); // Reset to first page when changing items per page
 });
 
@@ -523,6 +680,16 @@ const openEditModal = (customer) => {
   formErrors.value = {};
 };
 
+const openDetailsModal = (customer) => {
+  selectedCustomer.value = { ...customer };
+  showDetailsModal.value = true;
+};
+
+const closeDetailsModal = () => {
+  showDetailsModal.value = false;
+  selectedCustomer.value = null;
+};
+
 const closeModal = () => {
   showModal.value = false;
   editingCustomer.value = null;
@@ -539,7 +706,30 @@ const closeModal = () => {
 
 // Update the saveCustomer function
 const saveCustomer = async () => {
+  // Basic validation
+  if (!modalCustomer.value.name?.trim()) {
+    showNotification('Customer name is required', 'warning');
+    return;
+  }
+  
+  if (!modalCustomer.value.phone?.trim()) {
+    showNotification('Customer phone is required', 'warning');
+    return;
+  }
+  
+  if (!editingCustomer.value && !modalCustomer.value.password) {
+    showNotification('Password is required for new customers', 'warning');
+    return;
+  }
+  
+  if (!editingCustomer.value && modalCustomer.value.password !== modalCustomer.value.password_confirmation) {
+    showNotification('Passwords do not match', 'warning');
+    return;
+  }
+  
   loading.value = true;
+  showNotification('Saving customer...', 'info');
+  
   try {
     const token = getToken();
     const apiUrl = editingCustomer.value
@@ -548,7 +738,7 @@ const saveCustomer = async () => {
 
     let formattedPhone = modalCustomer.value.phone || '';
     formattedPhone = formattedPhone.replace(/[^\d+]/g, '');
-    if (!formattedPhone.startsWith('+')) {
+    if (!formattedPhone.startsWith('')) {
       formattedPhone = '+' + formattedPhone;
     }
 
@@ -584,7 +774,7 @@ const saveCustomer = async () => {
     }
 
     const data = await response.json();
-    console.log('API Response:', data); // Debug log
+    // API response received
 
     if (!response.ok) {
       if (response.status === 422) {
@@ -598,14 +788,14 @@ const saveCustomer = async () => {
     if (data.success) {
       await fetchCustomers();
       closeModal();
-      alert('Customer saved successfully');
+      showNotification('Customer saved successfully', 'success');
     } else {
       throw new Error(data.message || 'Failed to save customer');
     }
   } catch (e) {
     error.value = e.message;
     console.error('Error saving customer:', e);
-    alert(e.message);
+    showNotification(e.message || 'Failed to save customer', 'error');
   } finally {
     loading.value = false;
   }
@@ -646,15 +836,18 @@ const performSearch = async () => {
       lastPage.value = Math.ceil(data.data.meta.total / itemsPerPage.value);
       currentPage.value = parseInt(data.data.meta.page);
 
-      console.log('Search results:', {
-        query: customerSearchQuery.value,
-        column: searchColumn.value,
-        results: customers.value.length
-      });
+      // Search completed
+      
+      if (customers.value.length > 0) {
+        showNotification(`Found ${customers.value.length} customer(s)`, 'success');
+      } else {
+        showNotification('No customers found matching your search', 'info');
+      }
     }
   } catch (err) {
     error.value = err.message;
     console.error('Search error:', err);
+    showNotification(err.message || 'Search failed', 'error');
   } finally {
     loading.value = false;
   }
@@ -662,6 +855,7 @@ const performSearch = async () => {
 
 const clearSearch = async () => {
   customerSearchQuery.value = '';
+  showNotification('Search cleared', 'info');
   await fetchCustomers(1);
 };
 
@@ -691,6 +885,7 @@ const formatDate = (dateString) => {
 };
 
 import Sidebar from './Sidebar.vue';
+import NotificationContainer from '@/components/NotificationContainer.vue';
 </script>
 
 <style scoped>

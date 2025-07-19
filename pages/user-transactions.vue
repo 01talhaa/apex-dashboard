@@ -220,7 +220,7 @@
                           {{ user.name }}
                         </div>
                         <div class="text-xs text-gray-500">
-                          Created: {{ formatDate(user.created_at) }}
+                          Created: {{ user.created_at }}
                         </div>
                       </div>
                     </div>
@@ -741,17 +741,10 @@ const baseUrl = import.meta.env.VITE_API_BASE_URL || "https://api.example.com";
 
 // Menu items definition
 const menuItems = [
-  // { name: "Dashboard", path: "/dashboard", icon: "LayoutDashboard" },
-  // { name: "Products", path: "/products", icon: "Package" },
-  // { name: "Orders", path: "/orders", icon: "ShoppingCart" },
   { name: "Customers", path: "/customers", icon: "Users" },
-  // { name: "Reports", path: "/reports", icon: "BarChart" },
-  // { name: "Manage Shop", path: "/manageShop", icon: "Settings" },
-  // { name: "Cupon", path: "/cupon", icon: "Tag" },
-  // { name: "Invoicing", path: "/invoicing", icon: "FileText" },
   { name: "Lucky Spin", path: "/luckyspin", icon: "Award" },
   { name: "Leaderboard", path: "/leaderboard", icon: "Trophy" },
-  { name: "Billing", path: "/billing", icon: "CreditCard" },
+  { name: "Withdraw", path: "/withdraw", icon: "CreditCard" },
   { 
     name: "Transactions", 
     icon: "DollarSign",
@@ -760,8 +753,8 @@ const menuItems = [
       { name: "User Transactions", path: "/user-transactions", icon: "FileText" }
     ]
   },
+  { name: "Ads", path: "/ads", icon: "CreditCard" },
 ];
-// ...existing code...
 
 // Shop data
 const shop = ref({

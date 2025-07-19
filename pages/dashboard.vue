@@ -163,17 +163,10 @@ onMounted(() => {
 
 // Menu items definition
 const menuItems = [
-  // { name: "Dashboard", path: "/dashboard", icon: "LayoutDashboard" },
-  // { name: "Products", path: "/products", icon: "Package" },
-  // { name: "Orders", path: "/orders", icon: "ShoppingCart" },
   { name: "Customers", path: "/customers", icon: "Users" },
-  // { name: "Reports", path: "/reports", icon: "BarChart" },
-  // { name: "Manage Shop", path: "/manageShop", icon: "Settings" },
-  // { name: "Cupon", path: "/cupon", icon: "Tag" },
-  // { name: "Invoicing", path: "/invoicing", icon: "FileText" },
   { name: "Lucky Spin", path: "/luckyspin", icon: "Award" },
   { name: "Leaderboard", path: "/leaderboard", icon: "Trophy" },
-  { name: "Billing", path: "/billing", icon: "CreditCard" },
+  { name: "Withdraw", path: "/withdraw", icon: "CreditCard" },
   { 
     name: "Transactions", 
     icon: "DollarSign",
@@ -182,8 +175,8 @@ const menuItems = [
       { name: "User Transactions", path: "/user-transactions", icon: "FileText" }
     ]
   },
+  { name: "Ads", path: "/ads", icon: "CreditCard" },
 ];
-// ...existing code...
 
 // Initialize shop as a reactive object
 const shop = ref({ logo: null, name: null });
