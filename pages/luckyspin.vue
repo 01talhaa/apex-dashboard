@@ -337,26 +337,13 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, onActivated, watch } from 'vue';
 import axios from 'axios';
+import { useMenuItems } from '@/composables/useMenuItems';
 import Sidebar from './Sidebar.vue'; // Import the Sidebar component
 import { useRouter } from 'vue-router';
 import { useRoute } from 'vue-router';
 
-// Menu items definition
-const menuItems = [
-  { name: "Customers", path: "/customers", icon: "Users" },
-  { name: "Lucky Spin", path: "/luckyspin", icon: "Award" },
-  { name: "Leaderboard", path: "/leaderboard", icon: "Trophy" },
-  { name: "Withdraw", path: "/withdraw", icon: "CreditCard" },
-  { 
-    name: "Transactions", 
-    icon: "DollarSign",
-    subMenu: [
-      { name: "Transaction ID", path: "/transaction-id", icon: "CreditCard" },
-      { name: "User Transactions", path: "/user-transactions", icon: "FileText" }
-    ]
-  },
-  { name: "Ads", path: "/ads", icon: "CreditCard" },
-];
+// Get centralized menu items
+const { menuItems } = useMenuItems();
 
 const router = useRouter();
 const route = useRoute();

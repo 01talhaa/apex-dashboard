@@ -212,6 +212,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch, onUnmounted } from "vue";
+import { useMenuItems } from '@/composables/useMenuItems';
 import Sidebar from "./Sidebar.vue";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
@@ -223,22 +224,8 @@ const shop = ref({
   logo: "",
 });
 
-// Menu items definition
-const menuItems = [
-  { name: "Customers", path: "/customers", icon: "Users" },
-  { name: "Lucky Spin", path: "/luckyspin", icon: "Award" },
-  { name: "Leaderboard", path: "/leaderboard", icon: "Trophy" },
-  { name: "Withdraw", path: "/withdraw", icon: "CreditCard" },
-  { 
-    name: "Transactions", 
-    icon: "DollarSign",
-    subMenu: [
-      { name: "Transaction ID", path: "/transaction-id", icon: "CreditCard" },
-      { name: "User Transactions", path: "/user-transactions", icon: "FileText" }
-    ]
-  },
-  { name: "Ads", path: "/ads", icon: "CreditCard" },
-];
+// Get centralized menu items
+const { menuItems } = useMenuItems();
 const numberOfIds = ref("");
 const generatedIds = ref([]);
 const searchQuery = ref("");

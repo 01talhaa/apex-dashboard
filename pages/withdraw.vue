@@ -188,6 +188,7 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import Sidebar from './Sidebar.vue'; // Import the Sidebar component
 import { useNotificationStore } from '@/stores/useNotificationStore';
+import { useMenuItems } from '@/composables/useMenuItems';
 import NotificationContainer from '@/components/NotificationContainer.vue';
 
 // State
@@ -200,27 +201,14 @@ const debugInfo = ref(null);
 // Notification store
 const notificationStore = useNotificationStore();
 
+// Get centralized menu items
+const { menuItems } = useMenuItems();
+
 // Notification helper function
 const showNotification = (message, type = 'info', options = {}) => {
   notificationStore.addNotification(message, type, options?.duration || 5000, options);
 };
 
-// Menu items definition
-const menuItems = [
-  { name: "Customers", path: "/customers", icon: "Users" },
-  { name: "Lucky Spin", path: "/luckyspin", icon: "Award" },
-  { name: "Leaderboard", path: "/leaderboard", icon: "Trophy" },
-  { name: "Withdraw", path: "/withdraw", icon: "CreditCard" },
-  { 
-    name: "Transactions", 
-    icon: "DollarSign",
-    subMenu: [
-      { name: "Transaction ID", path: "/transaction-id", icon: "CreditCard" },
-      { name: "User Transactions", path: "/user-transactions", icon: "FileText" }
-    ]
-  },
-  { name: "Ads", path: "/ads", icon: "CreditCard" },
-];
 // Add these refs in the script setup section after existing refs
 const currentPage = ref(1);
 const itemsPerPage = ref(10);

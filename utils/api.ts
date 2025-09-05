@@ -2,9 +2,11 @@ import axios from 'axios'
 
 // Create Axios instance
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL, // Your API base URL
+  baseURL: import.meta.env.VITE_API_BASE_URL, // Your API base URL
   headers: {
     'Content-Type': 'application/json',
+    'X-Company-Token': import.meta.env.VITE_API_BASE_URL_X_COMPANY_TOKEN,
+    'X-Server-Api-Key': import.meta.env.VITE_API_BASE_URL_X_SERVER_API_KEY,
   },
 })
 

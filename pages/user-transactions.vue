@@ -734,27 +734,14 @@
 <script setup>
 import { ref, computed, onMounted, watch } from "vue";
 import { debounce } from "lodash-es";
+import { useMenuItems } from '@/composables/useMenuItems';
 import Sidebar from "./Sidebar.vue";
 
 // Base URL for the API
 const baseUrl = import.meta.env.VITE_API_BASE_URL || "https://api.example.com";
 
-// Menu items definition
-const menuItems = [
-  { name: "Customers", path: "/customers", icon: "Users" },
-  { name: "Lucky Spin", path: "/luckyspin", icon: "Award" },
-  { name: "Leaderboard", path: "/leaderboard", icon: "Trophy" },
-  { name: "Withdraw", path: "/withdraw", icon: "CreditCard" },
-  { 
-    name: "Transactions", 
-    icon: "DollarSign",
-    subMenu: [
-      { name: "Transaction ID", path: "/transaction-id", icon: "CreditCard" },
-      { name: "User Transactions", path: "/user-transactions", icon: "FileText" }
-    ]
-  },
-  { name: "Ads", path: "/ads", icon: "CreditCard" },
-];
+// Get centralized menu items
+const { menuItems } = useMenuItems();
 
 // Shop data
 const shop = ref({
