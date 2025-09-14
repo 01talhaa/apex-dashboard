@@ -4,6 +4,11 @@ export interface FileItem {
   entity_id: string;
   file_url: string;
   file_type: string;
+  file_name?: string;
+  file_size?: number;
+  mime_type?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface FileUploadResponse {

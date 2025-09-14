@@ -100,6 +100,9 @@
                     Referral Code
                   </th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -133,17 +136,29 @@
                     {{ customer.phone || 'N/A' }}
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">
-                    ${{ customer.balance || '0.00' }}
+                    Tk {{ customer.balance || '0.00' }}
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <div class="text-sm">
-                      <div class="font-medium">${{ customer.leaderboard?.total_commissions || '0.00' }}</div>
+                      <div class="font-medium">Tk {{ customer.leaderboard?.total_commissions || '0.00' }}</div>
                       <div class="text-xs text-gray-400">{{ customer.leaderboard?.total_nodes || 0 }} nodes</div>
                     </div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <span class="px-2 py-1 text-xs bg-gray-100 rounded-full">
                       {{ customer.referral_code || 'N/A' }}
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm">
+                    <span 
+                      :class="[
+                        'px-2 py-1 text-xs font-medium rounded-full',
+                        customer.status === 'active' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-red-100 text-red-800'
+                      ]"
+                    >
+                      {{ customer.status === 'active' ? 'Active' : 'Suspended' }}
                     </span>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm">
@@ -236,10 +251,10 @@
 
       <!-- Customer Details Modal -->
       <div v-if="showDetailsModal" 
-        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl transform transition-all mt-80">
-          <!-- Modal Header -->
-          <div class="bg-gradient-to-r from-green-600 to-green-800 text-white px-6 py-10 rounded-t-lg flex justify-between items-center">
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl h-[90vh] flex flex-col transform transition-all">
+          <!-- Modal Header (Sticky) -->
+          <div class="bg-gradient-to-r from-green-600 to-green-800 text-white px-6 py-4 rounded-t-lg flex justify-between items-center flex-shrink-0">
             <h2 class="text-2xl font-bold">Customer Details</h2>
             <button @click="closeDetailsModal" class="text-white hover:text-red-200 transition-colors">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -248,8 +263,8 @@
             </button>
           </div>
 
-          <!-- Modal Body -->
-          <div class="p-6">
+          <!-- Modal Body (Scrollable) -->
+          <div class="flex-1 overflow-y-auto p-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div class="col-span-2">
                 <div class="flex items-center justify-center mb-4">
@@ -308,17 +323,17 @@
               <!-- Financial Information -->
               <div class="border-b pb-2">
                 <p class="text-sm text-gray-500">Balance</p>
-                <p class="font-medium text-green-600">{{ selectedCustomer?.balance ? `$${selectedCustomer.balance}` : 'N/A' }}</p>
+                <p class="font-medium text-green-600">{{ selectedCustomer?.balance ? `Tk ${selectedCustomer.balance}` : 'N/A' }}</p>
               </div>
               
               <div class="border-b pb-2">
                 <p class="text-sm text-gray-500">Total Withdrawn</p>
-                <p class="font-medium text-blue-600">{{ selectedCustomer?.total_withdrawn_approved ? `$${selectedCustomer.total_withdrawn_approved}` : '$0.00' }}</p>
+                <p class="font-medium text-blue-600">{{ selectedCustomer?.total_withdrawn_approved ? `Tk ${selectedCustomer.total_withdrawn_approved}` : 'Tk 0.00' }}</p>
               </div>
               
               <div class="border-b pb-2">
                 <p class="text-sm text-gray-500">Pending Withdrawal</p>
-                <p class="font-medium text-orange-600">{{ selectedCustomer?.total_pending_withdrawal ? `$${selectedCustomer.total_pending_withdrawal}` : '$0.00' }}</p>
+                <p class="font-medium text-orange-600">{{ selectedCustomer?.total_pending_withdrawal ? `Tk ${selectedCustomer.total_pending_withdrawal}` : 'Tk 0.00' }}</p>
               </div>
               
               <div class="border-b pb-2">
@@ -337,13 +352,47 @@
                 <p class="font-medium">{{ selectedCustomer.referred_by.name }} ({{ selectedCustomer.referred_by.phone }})</p>
               </div>
               
+              <!-- Referral Chain -->
+              <div class="col-span-2 mt-4" v-if="selectedCustomer?.referred_by_chain">
+                <h4 class="text-lg font-semibold text-gray-800 mb-3">Referral Chain</h4>
+                <div class="space-y-3 max-h-48 overflow-y-auto bg-gray-50 rounded-lg p-4">
+                  <div 
+                    v-for="(referrer, index) in getReferralChainArray(selectedCustomer.referred_by_chain)" 
+                    :key="index"
+                    class="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm border-l-4"
+                    :class="getReferralLevelColor(referrer.level)"
+                  >
+                    <div class="flex items-center space-x-3">
+                      <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                        <span class="text-sm font-bold text-blue-600">L{{ referrer.level }}</span>
+                      </div>
+                      <div>
+                        <p class="font-medium text-gray-900">{{ referrer.name }}</p>
+                        <p class="text-sm text-gray-500">{{ referrer.phone }}</p>
+                      </div>
+                    </div>
+                    <div class="text-right">
+                      <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                        Level {{ referrer.level }}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <!-- No referral chain message -->
+                  <div v-if="!selectedCustomer.referred_by_chain || getReferralChainArray(selectedCustomer.referred_by_chain).length === 0" 
+                       class="text-center py-4 text-gray-500">
+                    <p>No referral chain found</p>
+                  </div>
+                </div>
+              </div>
+              
               <!-- Leaderboard Information -->
               <div class="col-span-2 mt-4" v-if="selectedCustomer?.leaderboard">
                 <h4 class="text-lg font-semibold text-gray-800 mb-3">Leaderboard Stats</h4>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div class="bg-blue-50 p-3 rounded-lg">
                     <p class="text-sm text-gray-500">Total Commissions</p>
-                    <p class="font-bold text-blue-600">{{ selectedCustomer.leaderboard.total_commissions || 0 }}</p>
+                    <p class="font-bold text-blue-600">Tk {{ selectedCustomer.leaderboard.total_commissions || 0 }}</p>
                   </div>
                   <div class="bg-green-50 p-3 rounded-lg">
                     <p class="text-sm text-gray-500">Total Nodes</p>
@@ -398,7 +447,7 @@
                       <p class="text-sm text-gray-500">Level {{ commission.level }}</p>
                     </div>
                     <div class="text-right">
-                      <p class="font-bold text-green-600">${{ commission.amount }}</p>
+                      <p class="font-bold text-green-600">Tk {{ commission.amount }}</p>
                     </div>
                   </div>
                 </div>
@@ -416,8 +465,29 @@
             </div>
           </div>
           
-          <!-- Modal Footer -->
-          <div class="bg-gray-50 px-6 py-4 rounded-b-lg flex justify-end">
+          <!-- Modal Footer (Sticky) -->
+          <div class="bg-gray-50 px-6 py-4 rounded-b-lg flex justify-between items-center flex-shrink-0">
+            <!-- Status Toggle -->
+            <div class="flex items-center space-x-3">
+              <span class="text-sm text-gray-600">Status:</span>
+              <button 
+                @click="toggleCustomerStatus(selectedCustomer)"
+                :class="[
+                  'px-3 py-1 rounded-full text-sm font-medium transition-colors',
+                  selectedCustomer?.status === 'active' 
+                    ? 'bg-green-100 text-green-800 hover:bg-green-200' 
+                    : 'bg-red-100 text-red-800 hover:bg-red-200'
+                ]"
+                :disabled="statusToggleLoading"
+              >
+                <svg v-if="statusToggleLoading" class="animate-spin -ml-1 mr-2 h-4 w-4 inline" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                {{ selectedCustomer?.status === 'active' ? 'Active' : 'Suspended' }}
+              </button>
+            </div>
+            
             <button @click="closeDetailsModal" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors">
               Close
             </button>
@@ -654,6 +724,9 @@ const commissionCurrentPage = ref(1);
 const commissionTotalPages = ref(1);
 const commissionPerPage = ref(15);
 
+// Status toggle loading state
+const statusToggleLoading = ref(false);
+
 // Computed property for paginated commissions
 const paginatedCommissions = computed(() => {
   if (!selectedCustomer.value?.commissions) return [];
@@ -705,16 +778,21 @@ const fetchCustomers = async (page = 1, commissionPage = 1) => {
     const data = await response.json();
     if (data.success && data.data) {
       customers.value = data.data.result.map(customer => {
-        // Ensure each customer has the necessary structure
+        // Ensure each customer has the necessary structure for the new API format
         return {
           ...customer,
           commissions: customer.commissions || [],
-          pagination: customer.pagination || { total: 0, current_page: 1, last_page: 1 },
-          leaderboard: customer.leaderboard || { total_commissions: 0, total_nodes: 0 }
+          referred_by_chain: customer.referred_by_chain || null,
+          leaderboard: customer.leaderboard || { 
+            total_commissions: 0, 
+            total_nodes: 0, 
+            total_earned_coins: 0,
+            profile_rank: 'N/A'
+          }
         };
       });
       totalItems.value = data.data.meta.total;
-      lastPage.value = Math.ceil(data.data.meta.total / itemsPerPage.value);
+      lastPage.value = data.data.meta.totalPage || Math.ceil(data.data.meta.total / itemsPerPage.value);
       currentPage.value = parseInt(data.data.meta.page);
 
       // Pagination info successfully loaded
@@ -842,9 +920,8 @@ const openEditModal = (customer) => {
 const openDetailsModal = async (customer) => {
   selectedCustomer.value = { ...customer };
   
-  // Calculate commission pagination on frontend
-  const allCommissions = customer.commissions || [];
-  const totalCommissions = allCommissions.length;
+  // Calculate commission pagination on frontend using commissions_count if available
+  const totalCommissions = customer.commissions_count || customer.commissions?.length || 0;
   commissionTotalPages.value = Math.ceil(totalCommissions / commissionPerPage.value);
   commissionCurrentPage.value = 1; // Start from page 1
   
@@ -1065,16 +1142,21 @@ const performSearch = async () => {
     const data = await response.json();
     if (data.success && data.data) {
       customers.value = data.data.result.map(customer => {
-        // Ensure each customer has the necessary structure
+        // Ensure each customer has the necessary structure for the new API format
         return {
           ...customer,
           commissions: customer.commissions || [],
-          pagination: customer.pagination || { total: 0, current_page: 1, last_page: 1 },
-          leaderboard: customer.leaderboard || { total_commissions: 0, total_nodes: 0 }
+          referred_by_chain: customer.referred_by_chain || null,
+          leaderboard: customer.leaderboard || { 
+            total_commissions: 0, 
+            total_nodes: 0, 
+            total_earned_coins: 0,
+            profile_rank: 'N/A'
+          }
         };
       });
       totalItems.value = data.data.meta.total;
-      lastPage.value = Math.ceil(data.data.meta.total / itemsPerPage.value);
+      lastPage.value = data.data.meta.totalPage || Math.ceil(data.data.meta.total / itemsPerPage.value);
       currentPage.value = parseInt(data.data.meta.page);
 
       // Search completed
@@ -1153,6 +1235,95 @@ const formatDate = (dateString) => {
   } catch (e) {
     // If parsing fails, return the original string
     return dateString;
+  }
+};
+
+// Helper function to convert referral chain object to array
+const getReferralChainArray = (referralChain) => {
+  if (!referralChain) return [];
+  
+  const chain = [];
+  let current = referralChain;
+  
+  while (current && current.name) {
+    chain.push({
+      name: current.name,
+      phone: current.phone,
+      level: current.level
+    });
+    current = current.referred_by;
+  }
+  
+  return chain;
+};
+
+// Helper function to get color class for referral levels
+const getReferralLevelColor = (level) => {
+  const colors = {
+    1: 'border-green-400',
+    2: 'border-blue-400', 
+    3: 'border-purple-400',
+    4: 'border-yellow-400',
+    5: 'border-red-400'
+  };
+  return colors[level] || 'border-gray-400';
+};
+
+// Status toggle function
+const toggleCustomerStatus = async (customer) => {
+  if (!customer) return;
+  
+  statusToggleLoading.value = true;
+  const newStatus = customer.status === 'active' ? 'suspended' : 'active';
+  
+  try {
+    const token = getToken();
+    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/v2/admin/users/${customer.id}`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        status: newStatus
+      })
+    });
+
+    if (response.status === 401) {
+      localStorage.removeItem('token');
+      showNotification('Session expired. Please login again.', 'error');
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 2000);
+      return;
+    }
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    if (data.success) {
+      // Update the selected customer status
+      selectedCustomer.value.status = newStatus;
+      
+      // Update the customer in the main list
+      const customerIndex = customers.value.findIndex(c => c.id === customer.id);
+      if (customerIndex !== -1) {
+        customers.value[customerIndex].status = newStatus;
+      }
+      
+      showNotification(`Customer status changed to ${newStatus}`, 'success');
+    } else {
+      throw new Error(data.message || 'Failed to update customer status');
+    }
+  } catch (error) {
+    console.error('Error updating customer status:', error);
+    showNotification(error.message || 'Failed to update customer status', 'error');
+  } finally {
+    statusToggleLoading.value = false;
   }
 };
 

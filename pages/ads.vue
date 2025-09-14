@@ -338,95 +338,159 @@
 
             <!-- Files Grid -->
             <div v-else-if="filteredFiles.length > 0" class="p-6">
-              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div
-                  v-for="file in filteredFiles"
-                  :key="file.id"
-                  class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
-                >
-                  <div class="flex justify-between items-start mb-3">
-                    <div class="flex-1">
-                      <h3 class="font-medium text-gray-900">Ad ID: {{ file.id }}</h3>
-                      <p class="text-sm text-gray-600">Type: {{ getFileTypeName(file.file_type) }}</p>
-                      <p class="text-xs text-gray-500">Created: {{ file.created_at }}</p>
+              <!-- Slideshow Files: Group by file type -->
+              <template v-if="selectedViewType === 'slideshow'">
+                <div v-for="fileType in sortedFileTypes" :key="fileType" class="mb-8">
+                  <!-- Section Header -->
+                  <div class="mb-4 pb-2 border-b border-gray-200">
+                    <div class="flex items-center justify-between">
+                      <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                        </svg>
+                        {{ getFileTypeName(fileType) }}
+                      </h3>
+                      <span class="px-3 py-1 text-sm font-medium bg-indigo-100 text-indigo-800 rounded-full">
+                        {{ groupedFiles[fileType].length }} {{ groupedFiles[fileType].length === 1 ? 'file' : 'files' }}
+                      </span>
                     </div>
-                    <span :class="['px-2 py-1 text-xs font-medium rounded-full', getCategoryColor(getFileTypeCategory(file.file_type))]">
-                      {{ getDisplayType(file) }}
-                    </span>
                   </div>
                   
-                  <!-- File Preview -->
-                  <div class="mb-3">
-                    <!-- Image Preview -->
-                    <div v-if="selectedViewType === 'image' && (isImageAdType(file.file_type) || isImageFile(file.file_url) || isCustomImageType(file.file_type))">
-                      <img
-                        :src="file.file_url"
-                        :alt="`File ${file.id}`"
-                        class="w-full h-32 object-cover rounded border"
-                        @error="handleImageError"
-                      />
-                    </div>
-                    
-                    <!-- Video Preview -->
-                    <div v-else-if="selectedViewType === 'video' && (isVideoAdType(file.file_type) || isVideoFile(file.file_url) || isCustomVideoType(file.file_type))">
-                      <video
-                        :src="file.file_url"
-                        class="w-full h-32 object-cover rounded border"
-                        controls
-                        preload="metadata"
-                        @error="handleVideoError"
-                      >
-                        Your browser does not support the video tag.
-                      </video>
-                    </div>
-                    
-                    <!-- Slideshow Preview -->
-                    <div v-else-if="selectedViewType === 'slideshow' && (isSlideshowAdType(file.file_type) || isCustomSlideshowType(file.file_type))">
-                      <!-- Always show image preview for slideshow files (most slideshow content will be images) -->
-                      <img
-                        :src="file.file_url"
-                        :alt="`Slideshow ${file.id}`"
-                        class="w-full h-32 object-cover rounded border"
-                        @error="handleImageError"
-                      />
-                    </div>
-                    
-                    <!-- Fallback for unsupported files -->
-                    <div v-else class="w-full h-32 bg-gray-100 rounded border flex items-center justify-center">
-                      <div class="text-center text-gray-500">
-                        <svg class="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                        </svg>
-                        <p class="text-sm">{{ selectedViewType === 'image' ? 'Image' : selectedViewType === 'video' ? 'Video' : 'Slideshow' }} preview</p>
-                        <p class="text-xs">Type: {{ getFileTypeName(file.file_type) }}</p>
+                  <!-- Files in this group -->
+                  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div
+                      v-for="file in groupedFiles[fileType]"
+                      :key="file.id"
+                      class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-gradient-to-br from-white to-indigo-50"
+                    >
+                      <div class="flex justify-between items-start mb-3">
+                        <div class="flex-1">
+                          <h4 class="font-medium text-gray-900">Ad ID: {{ file.id }}</h4>
+                          <p class="text-sm text-gray-600">Type: {{ getFileTypeName(file.file_type) }}</p>
+                          <p class="text-xs text-gray-500">Created: {{ file.created_at }}</p>
+                        </div>
+                        <span :class="['px-2 py-1 text-xs font-medium rounded-full', getCategoryColor(getFileTypeCategory(file.file_type))]">
+                          {{ getDisplayType(file) }}
+                        </span>
+                      </div>
+                      
+                      <!-- File Preview -->
+                      <div class="mb-3">
+                        <!-- Slideshow Preview -->
+                        <img
+                          :src="file.file_url"
+                          :alt="`Slideshow ${file.id}`"
+                          class="w-full h-32 object-cover rounded border shadow-sm"
+                          @error="handleImageError"
+                        />
+                      </div>
+                      
+                      <!-- Actions -->
+                      <div class="flex gap-2">
+                        <button
+                          @click="downloadFileFromUrl(file.file_url, `slideshow-${file.id}`)"
+                          class="flex-1 px-3 py-2 text-sm bg-green-600 text-white rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+                        >
+                          Download
+                        </button>
+                        <button
+                          @click="deleteFile(file.id)"
+                          class="flex-1 px-3 py-2 text-sm bg-red-600 text-white rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+                        >
+                          Delete
+                        </button>
                       </div>
                     </div>
                   </div>
-                  
-                  <!-- Actions -->
-                  <div class="flex gap-2">
-                    <button
-                      @click="downloadFileFromUrl(file.file_url, `file-${file.id}`)"
-                      class="flex-1 px-3 py-2 text-sm bg-green-600 text-white rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
-                    >
-                      Download
-                    </button>
-                    <button
-                      @click="deleteFile(file.id)"
-                      class="flex-1 px-3 py-2 text-sm bg-red-600 text-white rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
-                    >
-                      Delete
-                    </button>
+                </div>
+              </template>
+              
+              <!-- Regular Files: Image and Video (ungrouped) -->
+              <template v-else>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div
+                    v-for="file in filteredFiles"
+                    :key="file.id"
+                    class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                  >
+                    <div class="flex justify-between items-start mb-3">
+                      <div class="flex-1">
+                        <h3 class="font-medium text-gray-900">Ad ID: {{ file.id }}</h3>
+                        <p class="text-sm text-gray-600">Type: {{ getFileTypeName(file.file_type) }}</p>
+                        <p class="text-xs text-gray-500">Created: {{ file.created_at }}</p>
+                      </div>
+                      <span :class="['px-2 py-1 text-xs font-medium rounded-full', getCategoryColor(getFileTypeCategory(file.file_type))]">
+                        {{ getDisplayType(file) }}
+                      </span>
+                    </div>
+                    
+                    <!-- File Preview -->
+                    <div class="mb-3">
+                      <!-- Image Preview -->
+                      <div v-if="selectedViewType === 'image' && (isImageAdType(file.file_type) || isImageFile(file.file_url) || isCustomImageType(file.file_type))">
+                        <img
+                          :src="file.file_url"
+                          :alt="`File ${file.id}`"
+                          class="w-full h-32 object-cover rounded border"
+                          @error="handleImageError"
+                        />
+                      </div>
+                      
+                      <!-- Video Preview -->
+                      <div v-else-if="selectedViewType === 'video' && (isVideoAdType(file.file_type) || isVideoFile(file.file_url) || isCustomVideoType(file.file_type))">
+                        <video
+                          :src="file.file_url"
+                          class="w-full h-32 object-cover rounded border"
+                          controls
+                          preload="metadata"
+                          @error="handleVideoError"
+                        >
+                          Your browser does not support the video tag.
+                        </video>
+                      </div>
+                      
+                      <!-- Fallback for unsupported files -->
+                      <div v-else class="w-full h-32 bg-gray-100 rounded border flex items-center justify-center">
+                        <div class="text-center text-gray-500">
+                          <svg class="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                          </svg>
+                          <p class="text-sm">{{ selectedViewType === 'image' ? 'Image' : selectedViewType === 'video' ? 'Video' : 'Slideshow' }} preview</p>
+                          <p class="text-xs">Type: {{ getFileTypeName(file.file_type) }}</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <!-- Actions -->
+                    <div class="flex gap-2">
+                      <button
+                        @click="downloadFileFromUrl(file.file_url, `file-${file.id}`)"
+                        class="flex-1 px-3 py-2 text-sm bg-green-600 text-white rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+                      >
+                        Download
+                      </button>
+                      <button
+                        @click="deleteFile(file.id)"
+                        class="flex-1 px-3 py-2 text-sm bg-red-600 text-white rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </template>
 
               <!-- Pagination -->
               <div v-if="pagination.totalPage > 1" class="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
                 <!-- Pagination Info -->
                 <div class="text-sm text-gray-700">
-                  Showing {{ ((pagination.page - 1) * pagination.limit) + 1 }} to {{ Math.min(pagination.page * pagination.limit, pagination.total) }} of {{ pagination.total }} files
-                  <span class="text-gray-500">(filtered by {{ selectedViewType }}: {{ filteredFiles.length }})</span>
+                  <template v-if="selectedViewType === 'slideshow' && Object.keys(groupedFiles).length > 0">
+                    Showing {{ filteredFiles.length }} slideshow files in {{ Object.keys(groupedFiles).length }} {{ Object.keys(groupedFiles).length === 1 ? 'type' : 'types' }}
+                  </template>
+                  <template v-else>
+                    Showing {{ ((pagination.page - 1) * pagination.limit) + 1 }} to {{ Math.min(pagination.page * pagination.limit, pagination.total) }} of {{ pagination.total }} files
+                    <span class="text-gray-500">(filtered by {{ selectedViewType }}: {{ filteredFiles.length }})</span>
+                  </template>
                 </div>
                 
                 <!-- Pagination Controls -->
@@ -1153,6 +1217,60 @@ const filteredFiles = computed(() => {
       return isSlideshowAdType(file.file_type) || isCustomSlideshowType(file.file_type);
     }
     return false;
+  });
+});
+
+// Group files by file type for slideshow batch display
+const groupedFiles = computed(() => {
+  const grouped: { [key: string]: any[] } = {};
+  
+  if (selectedViewType.value === 'slideshow') {
+    filteredFiles.value.forEach(file => {
+      const fileType = file.file_type;
+      if (!grouped[fileType]) {
+        grouped[fileType] = [];
+      }
+      grouped[fileType].push(file);
+    });
+  }
+  
+  return grouped;
+});
+
+// Get sorted file type keys for consistent display order
+const sortedFileTypes = computed(() => {
+  if (selectedViewType.value !== 'slideshow') return [];
+  
+  return Object.keys(groupedFiles.value).sort((a, b) => {
+    // Sort slideshow types in a logical order
+    const order = [
+      'slideshow_banner_top',
+      'slideshow_banner_center', 
+      'slideshow_banner_bottom',
+      'slideshow_popup',
+      'slideshow_floating',
+      'slideshow_interstitial',
+      'slideshow_carousel',
+      'slideshow_gallery',
+      'slideshow_hero',
+      'slideshow',
+      'presentation'
+    ];
+    
+    const indexA = order.indexOf(a);
+    const indexB = order.indexOf(b);
+    
+    // If both are in the order array, sort by their position
+    if (indexA !== -1 && indexB !== -1) {
+      return indexA - indexB;
+    }
+    
+    // If only one is in the order array, prioritize it
+    if (indexA !== -1) return -1;
+    if (indexB !== -1) return 1;
+    
+    // If neither is in the order array, sort alphabetically
+    return a.localeCompare(b);
   });
 });
 

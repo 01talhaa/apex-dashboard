@@ -200,10 +200,33 @@
                   step="0.01"
                   min="0"
                   class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="0.00"
+                  :placeholder="`Level ${index + 1} commission (BDT)`"
                 >
+                <button 
+                  @click="removeLevel(index)"
+                  v-if="editingLevels.length > 1"
+                  class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                  title="Remove this level"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                  </svg>
+                </button>
               </div>
             </div>
+          </div>
+          
+          <!-- Add New Level Button -->
+          <div class="mt-4">
+            <button 
+              @click="addNewLevel"
+              class="w-full flex items-center justify-center space-x-2 px-4 py-2 border-2 border-dashed border-gray-300 hover:border-blue-400 text-gray-600 hover:text-blue-600 rounded-lg transition-colors"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+              </svg>
+              <span>Add New Level</span>
+            </button>
           </div>
           
           <div class="flex justify-end space-x-3 mt-6">
@@ -296,8 +319,16 @@ const fetchHistory = async () => {
 // Open edit modal
 const editCommission = (commission) => {
   editingCommission.value = commission;
-  // Convert levels array to simple array of values
-  editingLevels.value = commission.levels.map(level => level.value);
+  // Convert levels array to simple array of values, ensuring we maintain level order
+  const maxLevel = Math.max(...commission.levels.map(level => level.level));
+  editingLevels.value = [];
+  
+  // Initialize array with proper values for each level
+  for (let i = 1; i <= maxLevel; i++) {
+    const levelData = commission.levels.find(level => level.level === i);
+    editingLevels.value.push(levelData ? levelData.value : 0);
+  }
+  
   showEditModal.value = true;
 };
 
@@ -308,37 +339,51 @@ const closeEditModal = () => {
   editingLevels.value = [];
 };
 
+// Add new level
+const addNewLevel = () => {
+  editingLevels.value.push(0);
+};
+
+// Remove level
+const removeLevel = (index) => {
+  if (editingLevels.value.length > 1) {
+    editingLevels.value.splice(index, 1);
+  }
+};
+
+// Validate levels before updating
+const validateLevels = () => {
+  // Ensure all levels have valid numeric values
+  for (let i = 0; i < editingLevels.value.length; i++) {
+    if (editingLevels.value[i] === null || editingLevels.value[i] === undefined || isNaN(editingLevels.value[i])) {
+      editingLevels.value[i] = 0;
+    }
+  }
+};
+
 // Update commission
 const updateCommission = async () => {
   try {
     updating.value = true;
     
-    // Convert array to levels object format
+    // Validate levels before sending
+    validateLevels();
+    
+    // Convert array to levels object format - this ensures all levels are included
     const levelsObject = {};
     editingLevels.value.forEach((value, index) => {
-      levelsObject[index + 1] = value;
+      levelsObject[index + 1] = parseFloat(value) || 0;
     });
     
-    const response = await api.put(`/v2/admin/commissions/${editingCommission.value.type}`, {
+    console.log('Sending commission update with levels:', levelsObject);
+    
+    const response = await api.put('/v2/admin/commissions/signup', {
       levels: levelsObject
     });
     
     if (response.data.success) {
-      // Update local data
-      const updatedCommission = response.data.data;
-      const index = commissions.value.findIndex(c => c.id === updatedCommission.id);
-      if (index !== -1) {
-        // Convert levels object back to array format for display
-        const levelsArray = Object.entries(updatedCommission.levels).map(([level, value]) => ({
-          level: parseInt(level),
-          value: value
-        }));
-        
-        commissions.value[index] = {
-          ...updatedCommission,
-          levels: levelsArray
-        };
-      }
+      // Refresh commission data to get updated values
+      await fetchCommissions();
       
       // Refresh history to show the change
       fetchHistory();

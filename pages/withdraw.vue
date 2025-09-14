@@ -99,21 +99,51 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                       <span :class="[
-                        customer.status === 'paid'
+                        customer.status === 'approved'
                           ? 'bg-green-100 text-green-800'
-                          : 'bg-red-100 text-red-800',
+                          : customer.status === 'suspended'
+                          ? 'bg-red-100 text-red-800'
+                          : 'bg-yellow-100 text-yellow-800',
                         'px-2 inline-flex text-xs leading-5 font-semibold rounded-full'
                       ]">
-                        {{ customer.status || 'due' }}
+                        {{ customer.status || 'pending' }}
                       </span>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {{ formatDate(customer.created_at) }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm">
-                      <button @click="openEditModal(customer)" class="inline-flex items-center px-3 py-1.5 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        <span>{{ customer.status === 'paid' ? 'View' : 'Approve' }}</span>
-                      </button>
+                      <div class="flex space-x-2">
+                        <!-- Approve Button -->
+                        <button 
+                          v-if="customer.status !== 'approved'"
+                          @click="approveWithdrawal(customer)" 
+                          :disabled="processingWithdrawals[customer.id]"
+                          class="inline-flex items-center px-3 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <svg v-if="processingWithdrawals[customer.id] === 'approve'" class="animate-spin -ml-1 mr-1 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          <span>{{ processingWithdrawals[customer.id] === 'approve' ? 'Processing...' : 'Approve' }}</span>
+                        </button>
+                        
+                        <!-- Suspend Button -->
+                        <button 
+                          v-if="customer.status !== 'suspended'"
+                          @click="suspendWithdrawal(customer)" 
+                          :disabled="processingWithdrawals[customer.id]"
+                          class="inline-flex items-center px-3 py-1.5 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <svg v-if="processingWithdrawals[customer.id] === 'suspend'" class="animate-spin -ml-1 mr-1 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          <span>{{ processingWithdrawals[customer.id] === 'suspend' ? 'Processing...' : 'Suspend' }}</span>
+                        </button>
+                        
+
+                      </div>
                     </td>
                   </tr>
                 </tbody>
@@ -214,6 +244,9 @@ const currentPage = ref(1);
 const itemsPerPage = ref(10);
 const totalItems = ref(0);
 const lastPage = ref(0);
+
+// Add processing state for withdrawal actions
+const processingWithdrawals = ref({});
 
 // Update the fetchCustomers function to handle refresh
 const fetchCustomers = async (page = 1, isRefresh = false) => {
@@ -377,23 +410,18 @@ const formatDate = (dateString) => {
   }
 };
 
-const getStatusClass = (status) => {
-  return status === 'paid'
-    ? 'bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm'
-    : 'bg-red-100 text-red-800 px-2 py-1 rounded-full text-sm';
-};
-
 // Show toast message
 const showToastMessage = (message, status) => {
   // Legacy function - replaced by showNotification
   showNotification(message, status);
 };
 
-// Update customer status (client-side only since the API endpoint doesn't exist)
-const updateStatus = async (customer) => {
+// Approve withdrawal request
+const approveWithdrawal = async (customer) => {
+  processingWithdrawals.value[customer.id] = 'approve';
+  
   try {
     const token = localStorage.getItem('token');
-
     if (!token) {
       showNotification('Authentication token not found. Please login again.', 'error');
       setTimeout(() => {
@@ -402,12 +430,12 @@ const updateStatus = async (customer) => {
       throw new Error('No authentication token found');
     }
 
-    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/withdraws/${customer.id}/approve`, {
+    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/v2/admin/withdraws/${customer.id}/approve`, {
       method: 'POST',
       headers: {
+        'Authorization': `Bearer ${token}`,
         'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        'Content-Type': 'application/json'
       }
     });
 
@@ -420,22 +448,103 @@ const updateStatus = async (customer) => {
       throw new Error('Session expired. Please login again.');
     }
 
+    if (!response.ok) {
+      // Parse the response to get the error message
+      const errorData = await response.json().catch(() => ({}));
+      
+      if (response.status === 400 && errorData.message && errorData.message.includes("already")) {
+        // Handle cases where withdrawal is already processed
+        showNotification(errorData.message, 'warning');
+        return; // Exit the function without throwing an error
+      }
+      
+      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    }
+
     const data = await response.json();
-    showNotification(data.message || `Status updated to ${customer.status}`, customer.status === 'paid' ? 'success' : 'info');
+    
+    if (data.success) {
+      // Update the customer status in the list
+      const customerIndex = customers.value.findIndex(c => c.id === customer.id);
+      if (customerIndex !== -1) {
+        customers.value[customerIndex].status = 'approved';
+      }
+      
+      showNotification(data.message || 'Withdrawal request approved successfully', 'success');
+    } else {
+      throw new Error(data.message || 'Failed to approve withdrawal request');
+    }
   } catch (err) {
-    showNotification(err.message || 'Failed to update status', 'error');
+    console.error('Error approving withdrawal:', err);
+    showNotification(err.message || 'Failed to approve withdrawal request', 'error');
+  } finally {
+    delete processingWithdrawals.value[customer.id];
   }
 };
 
-// Open edit modal (placeholder for future implementation)
-const openEditModal = (customer) => {
-  // For now, just update the status
-  if (customer.status !== 'paid') {
-    showNotification('Processing withdrawal approval...', 'info');
-    customer.status = 'paid';
-    updateStatus(customer);
-  } else {
-    showNotification('Payment already processed', 'info');
+// Suspend withdrawal request
+const suspendWithdrawal = async (customer) => {
+  processingWithdrawals.value[customer.id] = 'suspend';
+  
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      showNotification('Authentication token not found. Please login again.', 'error');
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 2000);
+      throw new Error('No authentication token found');
+    }
+
+    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/v2/admin/withdraws/${customer.id}/suspend`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (response.status === 401) {
+      localStorage.removeItem('token');
+      showNotification('Session expired. Please login again.', 'error');
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 2000);
+      throw new Error('Session expired. Please login again.');
+    }
+
+    if (!response.ok) {
+      // Parse the response to get the error message
+      const errorData = await response.json().catch(() => ({}));
+      
+      if (response.status === 400 && errorData.message === "Withdraw request is already approved") {
+        // Handle the specific case where withdrawal is already approved
+        showNotification('Cannot suspend: This withdrawal request has already been approved', 'warning');
+        return; // Exit the function without throwing an error
+      }
+      
+      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    if (data.success) {
+      // Update the customer status in the list
+      const customerIndex = customers.value.findIndex(c => c.id === customer.id);
+      if (customerIndex !== -1) {
+        customers.value[customerIndex].status = 'suspended';
+      }
+      
+      showNotification(data.message || 'Withdrawal request suspended successfully', 'success');
+    } else {
+      throw new Error(data.message || 'Failed to suspend withdrawal request');
+    }
+  } catch (err) {
+    console.error('Error suspending withdrawal:', err);
+    showNotification(err.message || 'Failed to suspend withdrawal request', 'error');
+  } finally {
+    delete processingWithdrawals.value[customer.id];
   }
 };
 
@@ -460,20 +569,6 @@ onMounted(async () => {
 
   // Fetch customers
   await fetchCustomers();
-
-  // Apply any saved statuses from localStorage
-  try {
-    const savedStatuses = JSON.parse(localStorage.getItem('customerStatuses') || '{}');
-
-    // Update statuses for loaded customers if we have saved values
-    customers.value.forEach(customer => {
-      if (savedStatuses[customer.id]) {
-        customer.status = savedStatuses[customer.id];
-      }
-    });
-  } catch (e) {
-    console.error('Could not restore statuses from localStorage:', e);
-  }
 });
 </script>
 
