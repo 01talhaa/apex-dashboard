@@ -31,7 +31,7 @@
             </h2>
             <div class="max-w-xl">
               <!-- Cooldown Times Row Container -->
-              <div v-for="(time, index) in cooldownTimes" :key="index" class="flex items-center mb-2">
+              <div v-for="(time, index) in cooldownTimes" :key="index" class="flex items-center mb-2 gap-2">
                 <!-- Time Input with Clock Icon -->
                 <div class="relative flex-1">
                   <input type="time" v-model="cooldownTimes[index]"
@@ -46,18 +46,31 @@
                   </div>
                 </div>
 
+                <!-- Rotation Point Dropdown -->
+                <div class="relative flex-1">
+                  <select v-model="cooldownRotationPoints[index]"
+                    class="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all appearance-none">
+                    <option v-for="item in items" :key="item.rotation_point" :value="item.rotation_point"
+                      class="bg-gray-800 text-white">
+                      {{ item.value }}
+                    </option>
+                  </select>
+                  <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-gray-400" fill="none"
+                      viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
+
                 <!-- Remove Button -->
                 <button @click="removeCooldownTime(index)"
-                  class="ml-2 p-2 bg-red-500/20 hover:bg-red-500/40 rounded-lg text-white transition-colors">
+                  class="p-2 bg-red-500/20 hover:bg-red-500/40 rounded-lg text-white transition-colors flex-shrink-0">
                   <span>×</span>
                 </button>
 
                 <!-- Only show Add/Submit buttons for the last item in the list -->
-                <div v-if="index === cooldownTimes.length - 1" class="flex ml-2 items-center">
-                  <!-- <button @click="addCooldownTime"
-                    class="px-4 py-2 mr-2 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-lg hover:from-green-700 hover:to-teal-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-                    + Add
-                  </button> -->
+                <div v-if="index === cooldownTimes.length - 1" class="flex items-center flex-shrink-0">
                   <button @click="submitCooldownTimes"
                     class="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
                     Submit
@@ -101,6 +114,7 @@
                     <thead class="text-white border-b border-white/10 sticky top-0 backdrop-blur-sm z-10">
                       <tr>
                         <th class="py-1 text-left">Time</th>
+                        <th class="py-1 text-left">Prize</th>
                         <th class="py-1 text-center">Actions</th>
                       </tr>
                     </thead>
@@ -108,6 +122,7 @@
                       <tr v-for="spin in spinners" :key="spin.id"
                         class="border-b border-white/5 hover:bg-white/5 transition-colors">
                         <td class="py-1.5 text-white">{{ formatTime(spin.spin_time) }}</td>
+                        <td class="py-1.5 text-green-300 text-xs">{{ getPrizeValue(spin.rotation_point) }}</td>
                         <td class="py-1.5 flex justify-end space-x-2">
                           <!-- Edit button -->
                           <button @click.stop="openEditTimerModal(spin)"
@@ -133,7 +148,7 @@
                         </td>
                       </tr>
                       <tr v-if="spinners.length === 0">
-                        <td colspan="2" class="py-4 text-center text-purple-200">
+                        <td colspan="3" class="py-4 text-center text-purple-200">
                           No spins scheduled
                         </td>
                       </tr>
@@ -299,15 +314,24 @@
           </div>
         </div>
 
-        <!-- <div class="mb-6">
-          <label class="block text-sm font-medium text-gray-300 mb-1">Prize</label>
-          <select v-model="editTimerForm.rotationPoint"
-            class="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent">
-            <option v-for="(item, index) in items" :key="index" :value="index">
-              {{ item.value }}
-            </option>
-          </select>
-        </div> -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-300 mb-1">Prize/Rotation Point</label>
+          <div class="relative">
+            <select v-model="editTimerForm.rotationPoint"
+              class="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent appearance-none">
+              <option v-for="item in items" :key="item.rotation_point" :value="item.rotation_point"
+                class="bg-gray-800 text-white">
+                {{ item.value }} (Point {{ item.rotation_point }})
+              </option>
+            </select>
+            <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </div>
+        </div>
 
         <div class="flex justify-end gap-4">
           <button @click="closeEditTimerModal" class="px-4 py-2 text-gray-300 hover:text-white transition-colors">
@@ -355,6 +379,7 @@ const COOLDOWN_TIMES_KEY = "scheduled_cooldown_times";
 const LAST_SPIN_ROTATION_KEY = "last_spin_rotation";
 const COUNTDOWN_DATA_KEY = "countdown_data";
 const cooldownTimes = ref([""]);
+const cooldownRotationPoints = ref([0]); // Add rotation points for each time
 const countdown = ref("Set your spin schedule");
 const shop = ref({ name: "", logo: "" });
 const nextSpinTime = ref(null);
@@ -470,9 +495,16 @@ onMounted(async () => {
   }
 
   const savedTimeStrings = localStorage.getItem("cooldown_time_strings");
+  const savedRotationPoints = localStorage.getItem("cooldown_rotation_points");
   if (savedTimeStrings) {
     cooldownTimes.value = JSON.parse(savedTimeStrings);
     dailySchedule.value = cooldownTimes.value;
+  }
+  if (savedRotationPoints) {
+    cooldownRotationPoints.value = JSON.parse(savedRotationPoints);
+  } else {
+    // Initialize rotation points array to match cooldown times length
+    cooldownRotationPoints.value = new Array(cooldownTimes.value.length).fill(0);
   }
 
   const savedTimes = localStorage.getItem(COOLDOWN_TIMES_KEY);
@@ -564,13 +596,17 @@ const saveItemName = () => {
 
 const addCooldownTime = () => {
   cooldownTimes.value.push("");
+  cooldownRotationPoints.value.push(0);
   localStorage.setItem("cooldown_time_strings", JSON.stringify(cooldownTimes.value));
+  localStorage.setItem("cooldown_rotation_points", JSON.stringify(cooldownRotationPoints.value));
 };
 
 const removeCooldownTime = (index) => {
   if (cooldownTimes.value.length > 1) {
     cooldownTimes.value.splice(index, 1);
+    cooldownRotationPoints.value.splice(index, 1);
     localStorage.setItem("cooldown_time_strings", JSON.stringify(cooldownTimes.value));
+    localStorage.setItem("cooldown_rotation_points", JSON.stringify(cooldownRotationPoints.value));
   }
 };
 
@@ -596,8 +632,12 @@ const submitCooldownTimes = async () => {
       return;
     }
 
-    // Get only the latest added time
-    const latestTime = validTimes[validTimes.length - 1];
+    // Get the latest added time and its corresponding rotation point
+    const latestTimeIndex = validTimes.length - 1;
+    const latestTime = validTimes[latestTimeIndex];
+    const selectedRotationPoint = cooldownRotationPoints.value[latestTimeIndex] !== undefined 
+      ? cooldownRotationPoints.value[latestTimeIndex] 
+      : 0;
 
     // Check if this time already exists
     const existingTimes = spinners.value.map(spin => spin.spin_time_24h);
@@ -613,8 +653,7 @@ const submitCooldownTimes = async () => {
     const day = String(today.getDate()).padStart(2, '0');
     const dateStr = `${year}-${month}-${day}`;
 
-    // Use only the latest time
-    const randomIndex = Math.floor(Math.random() * 8);
+    // Use the selected rotation point instead of random
     const [hours, minutes] = latestTime.split(':').map(Number);
     const period = hours >= 12 ? 'PM' : 'AM';
     const formattedHours = hours % 12 || 12;
@@ -624,7 +663,7 @@ const submitCooldownTimes = async () => {
       `${import.meta.env.VITE_API_BASE_URL}/spinner`,
       {
         spin_time: formattedTime,
-        rotation_point: randomIndex.toString()
+        rotation_point: selectedRotationPoint.toString()
       },
       {
         headers: {
@@ -635,11 +674,12 @@ const submitCooldownTimes = async () => {
     );
 
     if (response.data.success) {
-      console.log(`API Schedule Created - Time: ${formattedTime}, Index: ${randomIndex}`);
+      console.log(`API Schedule Created - Time: ${formattedTime}, Rotation Point: ${selectedRotationPoint}`);
       console.log('API Response:', response.data);
 
-      // Save the list of time strings to localStorage
+      // Save the list of time strings and rotation points to localStorage
       localStorage.setItem("cooldown_time_strings", JSON.stringify(cooldownTimes.value));
+      localStorage.setItem("cooldown_rotation_points", JSON.stringify(cooldownRotationPoints.value));
 
       // Refresh spinner data to get latest schedule
       await refreshSpinnerData();
@@ -664,12 +704,14 @@ const submitCooldownTimes = async () => {
         }
       }
 
-      // Show success message for the newly added timer
-      scheduleMessage.value = `Successfully scheduled spin for ${formattedTime}`;
+      // Show success message with the prize value
+      const prizeValue = items.value.find(item => item.rotation_point === selectedRotationPoint)?.value || 'Unknown';
+      scheduleMessage.value = `Successfully scheduled spin for ${formattedTime} with prize: ${prizeValue}`;
       saveCountdownData();
 
       // Optionally clear the input field after adding
       cooldownTimes.value[cooldownTimes.value.length - 1] = "";
+      cooldownRotationPoints.value[cooldownRotationPoints.value.length - 1] = 0;
     }
   } catch (error) {
     console.error('Error scheduling spin:', error);
@@ -1174,6 +1216,31 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 .time-input-container .clock-icon {
   pointer-events: none;
   z-index: 2;
+}
+
+/* Select dropdown styling */
+select {
+  background-image: none;
+}
+
+select::-ms-expand {
+  display: none;
+}
+
+/* Custom dropdown arrow styling */
+select.appearance-none {
+  background-image: none;
+  padding-right: 40px;
+}
+
+select option {
+  background-color: #1f2937;
+  color: white;
+  padding: 8px;
+}
+
+select option:hover {
+  background-color: #374151;
 }
 
 .spinner-schedule td button svg {
