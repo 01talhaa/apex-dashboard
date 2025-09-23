@@ -185,7 +185,7 @@
     <div v-if="showEditModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
         <div class="bg-gradient-to-r from-blue-600 to-blue-800 text-white px-6 py-4 rounded-t-lg">
-          <h3 class="text-lg font-semibold">Edit {{ editingCommission?.type }} Commission</h3>
+          <h3 class="text-lg font-semibold">Edit {{ editingCommission?.type || 'Commission' }}</h3>
         </div>
         
         <div class="p-6">
@@ -318,6 +318,12 @@ const fetchHistory = async () => {
 
 // Open edit modal
 const editCommission = (commission) => {
+  // Safety check to ensure commission is valid
+  if (!commission || !commission.type || !commission.levels) {
+    console.error('Invalid commission data provided');
+    return;
+  }
+  
   editingCommission.value = commission;
   // Convert levels array to simple array of values, ensuring we maintain level order
   const maxLevel = Math.max(...commission.levels.map(level => level.level));
@@ -351,53 +357,61 @@ const removeLevel = (index) => {
   }
 };
 
-// Validate levels before updating
-const validateLevels = () => {
-  // Ensure all levels have valid numeric values
-  for (let i = 0; i < editingLevels.value.length; i++) {
-    if (editingLevels.value[i] === null || editingLevels.value[i] === undefined || isNaN(editingLevels.value[i])) {
-      editingLevels.value[i] = 0;
-    }
-  }
-};
-
 // Update commission
 const updateCommission = async () => {
   try {
     updating.value = true;
-    
-    // Validate levels before sending
-    validateLevels();
-    
-    // Convert array to levels object format - this ensures all levels are included
+    error.value = null; // Clear any previous errors
+
+    // Guard: editingCommission must not be null
+    if (!editingCommission.value || !editingCommission.value.type) {
+      error.value = 'No commission selected for update.';
+      updating.value = false;
+      return;
+    }
+
+    // Convert array to levels object format
     const levelsObject = {};
     editingLevels.value.forEach((value, index) => {
-      levelsObject[index + 1] = parseFloat(value) || 0;
+      levelsObject[index + 1] = value;
     });
-    
-    console.log('Sending commission update with levels:', levelsObject);
-    
-    const response = await api.put('/v2/admin/commissions/signup', {
+
+    // Determine the correct endpoint based on commission type
+    const commissionType = editingCommission.value.type.toLowerCase();
+    const endpoint = commissionType === 'signup'
+      ? '/v2/admin/commissions/signup'
+      : '/v2/admin/commissions/purchase';
+
+    const response = await api.put(endpoint, {
       levels: levelsObject
     });
-    
+
+    // API handles validation - just trust the response
     if (response.data.success) {
       // Refresh commission data to get updated values
       await fetchCommissions();
-      
+
       // Refresh history to show the change
       fetchHistory();
-      
+
       closeEditModal();
-      
-      // Show success message (you can add a notification system here)
-      console.log('Commission updated successfully');
+
+      console.log(`${editingCommission.value?.type || 'Commission'} updated successfully`);
     } else {
+      // Only show error if API explicitly returns success: false
       throw new Error(response.data.message || 'Failed to update commission');
     }
   } catch (err) {
     console.error('Error updating commission:', err);
-    error.value = 'Failed to update commission. Please try again.';
+
+    // Only set error message for actual failures
+    if (err.response && err.response.data && err.response.data.message) {
+      error.value = err.response.data.message;
+    } else if (err.message) {
+      error.value = err.message;
+    } else {
+      error.value = 'Failed to update commission. Please try again.';
+    }
   } finally {
     updating.value = false;
   }

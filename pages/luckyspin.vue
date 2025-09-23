@@ -262,11 +262,57 @@
           </div>
         </div>
 
-        <!-- Items Grid -->
-        <div class="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div v-for="(item, index) in items" :key="index" @click="openEditModal(index)"
-            class="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/20 cursor-pointer hover:bg-white/10 transition-all duration-300 group">
-            <p class="text-white text-center group-hover:scale-105 transition-transform">{{ item.value }}</p>
+        <!-- Items Grid with Add/Remove functionality -->
+        <div class="mt-8">
+          <!-- Add new item section -->
+          <div class="mb-6 bg-white/10 backdrop-blur-md rounded-xl border border-white/20 p-4">
+            <h3 class="text-lg font-bold text-white mb-4 flex items-center">
+              <span class="mr-2">🎯</span> Manage Spinner Items
+            </h3>
+            <div class="flex items-center gap-4">
+              <div class="flex-1">
+                <input 
+                  v-model="newItemValue" 
+                  type="text" 
+                  placeholder="Enter item value (e.g. 100, 200, etc.)"
+                  class="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+              </div>
+              <button 
+                @click="addNewItem"
+                :disabled="!newItemValue.trim() || spinnerLoading"
+                class="px-6 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Add Item
+              </button>
+            </div>
+          </div>
+
+          <!-- Items Grid -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div v-for="(item, index) in items" :key="index" 
+              class="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/20 hover:bg-white/10 transition-all duration-300 group relative">
+              <!-- Delete button -->
+              <button 
+                @click="removeItem(index)"
+                :disabled="spinnerLoading"
+                class="absolute top-2 right-2 p-1 bg-red-500/20 hover:bg-red-500/40 rounded-full text-white opacity-0 group-hover:opacity-100 transition-all duration-300 disabled:opacity-50"
+                title="Remove this item"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+              
+              <!-- Edit functionality -->
+              <div @click="openEditModal(index)" class="cursor-pointer">
+                <p class="text-white text-center group-hover:scale-105 transition-transform">{{ item.value }}</p>
+                <p class="text-xs text-purple-300 text-center mt-1">Point {{ item.rotation_point }}</p>
+              </div>
+            </div>
           </div>
         </div>
       </main>
@@ -400,6 +446,7 @@ const rotationValues = [2475, 2430, 2385, 2340, 2295, 2250, 2205, 2160];
 const currentSpinIndex = ref(0);
 const spinnerLoading = ref(false);
 const spinnerError = ref(null);
+const newItemValue = ref(''); // Add new item input
 
 const isEditTimerModalOpen = ref(false);
 const editTimerForm = ref({
@@ -816,28 +863,96 @@ const spin = async (predeterminedIndex = null) => {
 
 const sendItemsToServer = async () => {
   try {
+    spinnerLoading.value = true;
     const token = localStorage.getItem('token');
     if (!token) {
       console.error('No token found! Please log in first.');
       return;
     }
 
+    // Prepare items array with proper rotation_point values
+    const itemsPayload = items.value.map((item, index) => ({
+      value: item.value.toString(),
+      rotation_point: index
+    }));
+
     const response = await axios.patch(
       `${import.meta.env.VITE_API_BASE_URL}/spinner-items`,
-      { items: items.value },
+      { items: itemsPayload },
       {
         headers: {
           'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
       }
     );
 
     if (response.data.success) {
-      console.log('Items sent successfully:', response.data);
+      console.log('Items updated successfully:', response.data);
       items.value = response.data.data.items;
+      scheduleMessage.value = 'Spinner items updated successfully';
+      saveCountdownData();
     }
   } catch (error) {
-    console.error('Error sending items:', error);
+    console.error('Error updating items:', error);
+    spinnerError.value = 'Failed to update items. Please try again.';
+  } finally {
+    spinnerLoading.value = false;
+  }
+};
+
+const addNewItem = async () => {
+  if (!newItemValue.value.trim()) return;
+  
+  try {
+    // Add new item to the array with auto-generated rotation point
+    const newItem = {
+      value: newItemValue.value.trim(),
+      rotation_point: items.value.length
+    };
+    
+    items.value.push(newItem);
+    
+    // Send updated items array to server
+    await sendItemsToServer();
+    
+    // Clear input field
+    newItemValue.value = '';
+  } catch (error) {
+    console.error('Error adding new item:', error);
+    // Remove the item we just added if API call failed
+    items.value.pop();
+  }
+};
+
+const removeItem = async (index) => {
+  if (items.value.length <= 1) {
+    spinnerError.value = 'Cannot remove the last item';
+    return;
+  }
+  
+  try {
+    // Store the removed item in case we need to restore it
+    const removedItem = items.value[index];
+    
+    // Remove item from array
+    items.value.splice(index, 1);
+    
+    // Update rotation points for remaining items
+    items.value.forEach((item, idx) => {
+      item.rotation_point = idx;
+    });
+    
+    // Send updated items array to server
+    await sendItemsToServer();
+  } catch (error) {
+    console.error('Error removing item:', error);
+    // Restore the item if API call failed
+    items.value.splice(index, 0, removedItem);
+    // Restore original rotation points
+    items.value.forEach((item, idx) => {
+      item.rotation_point = idx;
+    });
   }
 };
 
