@@ -3,7 +3,7 @@ import type { FileListResponse } from '@/types/file'
 
 // File API configuration using environment variables
 const fileApiConfig = {
-  baseURL: import.meta.env.VITE_API_BASE_URL_FILE_UPLOAD || 'http://cdn.apexdrive365.com/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL_FILE_UPLOAD || 'https://cdn.apexdrive365.com/api',
   companyToken: import.meta.env.VITE_API_BASE_URL_X_COMPANY_TOKEN,
   serverApiKey: import.meta.env.VITE_API_BASE_URL_X_SERVER_API_KEY,
 }
@@ -28,6 +28,8 @@ const fileApi = axios.create({
   timeout: 30000, // 30 second timeout for file uploads
   headers: {
     'Accept': 'application/json',
+    'x-company-token': fileApiConfig.companyToken,
+    'x-server-api-key': fileApiConfig.serverApiKey,
   }
 })
 
@@ -37,6 +39,8 @@ const httpsFileApi = axios.create({
   timeout: 30000,
   headers: {
     'Accept': 'application/json',
+    'x-company-token': fileApiConfig.companyToken,
+    'x-server-api-key': fileApiConfig.serverApiKey,
   }
 })
 
@@ -152,8 +156,8 @@ export const uploadFiles = async (files: File[], fileType: string, entityId: str
     
     try {
       // Fallback to main API
-      console.log('Trying main API upload to:', import.meta.env.VITE_API_BASE_URL + '/data');
-      const response = await mainApi.post('/data', formData, { 
+      console.log('Trying main API upload to:', import.meta.env.VITE_API_BASE_URL_FILE_UPLOAD + '/data');
+      const response = await fileApi.post('/data', formData, {
         headers,
         timeout: 60000,
       })
@@ -245,8 +249,8 @@ export const getFiles = async (page: number = 1, limit: number = 10): Promise<Fi
       
       try {
         // Fallback to main API
-        console.log('Trying main API get from:', import.meta.env.VITE_API_BASE_URL + '/data');
-        const response = await mainApi.get('/data', { headers, params })
+        console.log('Trying main API get from:', import.meta.env.VITE_API_BASE_URL_FILE_UPLOAD + '/data');
+        const response = await fileApi.get('/data', { headers, params })
         console.log('Get files successful via main API:', response.data);
         
         const data = response.data
