@@ -212,25 +212,12 @@ import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import QrcodeVue from "qrcode.vue";
 import Sidebar from './Sidebar.vue';
+import { useMenuItems } from '@/composables/useMenuItems';
 import { useNotificationStore } from '@/stores/useNotificationStore';
 import { uploadFiles, getFiles } from '@/utils/fileApi'; 
 
-// Menu items definition
-const menuItems = [
-  { name: "Customers", path: "/customers", icon: "Users" },
-  { name: "Lucky Spin", path: "/luckyspin", icon: "Award" },
-  { name: "Leaderboard", path: "/leaderboard", icon: "Trophy" },
-  { name: "Withdraw", path: "/withdraw", icon: "CreditCard" },
-  { 
-    name: "Transactions", 
-    icon: "DollarSign",
-    subMenu: [
-      { name: "Transaction ID", path: "/transaction-id", icon: "CreditCard" },
-      { name: "User Transactions", path: "/user-transactions", icon: "FileText" }
-    ]
-  },
-  { name: "Ads", path: "/ads", icon: "CreditCard" },
-];
+// Get centralized menu items
+const { menuItems } = useMenuItems();
 
 // Initialize stores
 const notificationStore = useNotificationStore();

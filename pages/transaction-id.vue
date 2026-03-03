@@ -98,6 +98,12 @@
                       Transaction ID
                     </th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Assigned User
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Generated Date
                     </th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -106,21 +112,56 @@
                   </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                  <tr v-for="(id, index) in paginatedAndFilteredIds" :key="id.transactionId" class="hover:bg-gray-50">
+                  <tr v-for="(transaction, index) in paginatedAndFilteredIds" :key="transaction.id" class="hover:bg-gray-50">
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {{ (currentPage - 1) * itemsPerPage + index + 1 }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {{ id.transactionId }}
+                      {{ transaction.transactionId }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {{ id.date }}
+                      <div v-if="transaction.is_assigned && transaction.user !== 'not assigned'">
+                        <div class="font-medium">Name: {{ transaction.user.name }}</div>
+                        <div class="text-xs text-gray-400">Phone: {{ transaction.user.phone }}</div>
+                        <div class="text-xs text-blue-500">Referral Code: {{ transaction.user.referral_code }}</div>
+                      </div>
+                      <span v-else class="text-gray-400 italic">Not assigned</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                      <span :class="[
+                        'px-2 py-1 text-xs font-semibold rounded-full',
+                        transaction.status === 'activate' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-red-100 text-red-800'
+                      ]">
+                        {{ transaction.status }}
+                      </span>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <button @click="deleteId(id.transactionId)"
-                        class="text-red-600 hover:text-red-800 transition-colors duration-200">
-                        <span class="material-icons text-xl">Suspend</span>
-                      </button>
+                      {{ transaction.date }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <div class="flex items-center space-x-2">
+                        <button 
+                          @click="toggleStatus(transaction)"
+                          :disabled="loading"
+                          :class="[
+                            'px-3 py-1 text-xs font-medium rounded transition-colors',
+                            transaction.status === 'activate'
+                              ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                              : 'bg-green-100 text-green-700 hover:bg-green-200'
+                          ]"
+                        >
+                          {{ transaction.status === 'activate' ? 'Suspend' : 'Activate' }}
+                        </button>
+                        <button 
+                          @click="deleteId(transaction.transactionId)"
+                          :disabled="loading"
+                          class="text-red-600 hover:text-red-800 transition-colors duration-200"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 </tbody>
@@ -212,6 +253,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch, onUnmounted } from "vue";
+import { useMenuItems } from '@/composables/useMenuItems';
 import Sidebar from "./Sidebar.vue";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
@@ -223,22 +265,8 @@ const shop = ref({
   logo: "",
 });
 
-// Menu items definition
-const menuItems = [
-  { name: "Customers", path: "/customers", icon: "Users" },
-  { name: "Lucky Spin", path: "/luckyspin", icon: "Award" },
-  { name: "Leaderboard", path: "/leaderboard", icon: "Trophy" },
-  { name: "Withdraw", path: "/withdraw", icon: "CreditCard" },
-  { 
-    name: "Transactions", 
-    icon: "DollarSign",
-    subMenu: [
-      { name: "Transaction ID", path: "/transaction-id", icon: "CreditCard" },
-      { name: "User Transactions", path: "/user-transactions", icon: "FileText" }
-    ]
-  },
-  { name: "Ads", path: "/ads", icon: "CreditCard" },
-];
+// Get centralized menu items
+const { menuItems } = useMenuItems();
 const numberOfIds = ref("");
 const generatedIds = ref([]);
 const searchQuery = ref("");
@@ -394,6 +422,54 @@ const fetchTransactions = async (page = currentPage.value) => {
   }
 };
 
+// Toggle status between activate and suspend
+const toggleStatus = async (transaction) => {
+  try {
+    loading.value = true;
+    error.value = null;
+    
+    const newStatus = transaction.status === 'activate' ? 'suspend' : 'activate';
+    const userId = transaction.is_assigned && transaction.user !== 'not assigned' ? transaction.user.id : null;
+    
+    const response = await axios.patch(
+      `${import.meta.env.VITE_API_BASE_URL}/v2/admin/transactions/${transaction.transactionId}`,
+      {
+        userId: userId,
+        transactionId: transaction.transactionId,
+        status: newStatus
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    if (response.data.success) {
+      // Update the transaction in the local array
+      const index = generatedIds.value.findIndex(t => t.id === transaction.id);
+      if (index !== -1) {
+        generatedIds.value[index] = response.data.data;
+      }
+      
+      // Show success message from API
+      error.value = null;
+      console.log(response.data.message);
+    }
+  } catch (err) {
+    // Show API error message
+    if (err.response && err.response.data && err.response.data.message) {
+      error.value = err.response.data.message;
+    } else {
+      error.value = 'Failed to update transaction status';
+    }
+    console.error('Toggle status error:', err);
+  } finally {
+    loading.value = false;
+  }
+};
+
 // Delete a specific ID
 const deleteId = async (transactionId) => {
   try {
@@ -429,7 +505,7 @@ const deleteAllIds = async () => {
     loading.value = true;
     const response = await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/transactions/all-delete`, {
       data: {
-        transactionIds: generatedIds.value.map(id => id.transactionId)
+        transactionIds: generatedIds.value.map(transaction => transaction.transactionId)
       },
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -441,7 +517,11 @@ const deleteAllIds = async () => {
       error.value = null;
     }
   } catch (err) {
-    error.value = 'Failed to delete all transactions';
+    if (err.response && err.response.data && err.response.data.message) {
+      error.value = err.response.data.message;
+    } else {
+      error.value = 'Failed to delete all transactions';
+    }
     console.error(err);
   } finally {
     loading.value = false;
@@ -473,13 +553,17 @@ const downloadCurrentPageIds = (format) => {
 };
 
 const downloadCSV = (data, fileName) => {
-  const headers = ["No.", "Transaction ID", "Generated Date"];
+  const headers = ["No.", "Transaction ID", "Assigned User", "Status", "Generated Date"];
   const csvContent = [
     headers,
-    ...data.map((id, index) => [
+    ...data.map((transaction, index) => [
       (currentPage.value - 1) * itemsPerPage.value + index + 1,
-      id.transactionId,
-      id.date
+      transaction.transactionId,
+      transaction.is_assigned && transaction.user !== 'not assigned' 
+        ? `${transaction.user.name} (${transaction.user.phone})` 
+        : 'Not assigned',
+      transaction.status,
+      transaction.date
     ])
   ]
     .map(row => row.join(","))
@@ -497,11 +581,15 @@ const downloadPDF = (data, fileName) => {
   doc.text(`Page ${currentPage.value} - Generated on ${new Date().toLocaleString()}`, 14, 25);
 
   doc.autoTable({
-    head: [["No.", "Transaction ID", "Generated Date"]],
-    body: data.map((id, index) => [
+    head: [["No.", "Transaction ID", "Assigned User", "Status", "Generated Date"]],
+    body: data.map((transaction, index) => [
       (currentPage.value - 1) * itemsPerPage.value + index + 1,
-      id.transactionId,
-      id.date
+      transaction.transactionId,
+      transaction.is_assigned && transaction.user !== 'not assigned' 
+        ? `${transaction.user.name} (${transaction.user.phone})` 
+        : 'Not assigned',
+      transaction.status,
+      transaction.date
     ]),
     startY: 35,
     theme: 'grid',
@@ -510,9 +598,11 @@ const downloadPDF = (data, fileName) => {
       cellPadding: 3,
     },
     columnStyles: {
-      0: { cellWidth: 20 },
-      1: { cellWidth: 100 },
-      2: { cellWidth: 70 }
+      0: { cellWidth: 15 },
+      1: { cellWidth: 45 },
+      2: { cellWidth: 50 },
+      3: { cellWidth: 20 },
+      4: { cellWidth: 60 }
     }
   });
 
@@ -520,9 +610,12 @@ const downloadPDF = (data, fileName) => {
 };
 
 const downloadTXT = (data, fileName) => {
-  const txtContent = data.map((id, index) =>
-    `${(currentPage.value - 1) * itemsPerPage.value + index + 1}. ${id.transactionId} - Generated on: ${id.date}`
-  ).join("\n");
+  const txtContent = data.map((transaction, index) => {
+    const userInfo = transaction.is_assigned && transaction.user !== 'not assigned' 
+      ? `${transaction.user.name} (${transaction.user.phone})` 
+      : 'Not assigned';
+    return `${(currentPage.value - 1) * itemsPerPage.value + index + 1}. ${transaction.transactionId} - User: ${userInfo} - Status: ${transaction.status} - Generated on: ${transaction.date}`;
+  }).join("\n");
 
   downloadFile(txtContent, `${fileName}.txt`, "text/plain");
 };
@@ -547,9 +640,23 @@ const downloadFile = (content, fileName, mimeType) => {
 // Filter IDs based on search query
 const filteredIds = computed(() => {
   if (!searchQuery.value) return generatedIds.value;
-  return generatedIds.value.filter(id =>
-    id.transactionId.toLowerCase().includes(searchQuery.value.toLowerCase())
-  );
+  const query = searchQuery.value.toLowerCase();
+  return generatedIds.value.filter(transaction => {
+    // Search in transaction ID
+    if (transaction.transactionId.toLowerCase().includes(query)) return true;
+    
+    // Search in user name and phone if assigned
+    if (transaction.is_assigned && transaction.user !== 'not assigned') {
+      if (transaction.user.name.toLowerCase().includes(query)) return true;
+      if (transaction.user.phone.toLowerCase().includes(query)) return true;
+      if (transaction.user.referral_code.toLowerCase().includes(query)) return true;
+    }
+    
+    // Search in status
+    if (transaction.status.toLowerCase().includes(query)) return true;
+    
+    return false;
+  });
 });
 
 // Pagination computations

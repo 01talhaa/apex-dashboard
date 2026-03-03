@@ -435,11 +435,13 @@
                     <span
                       :class="`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
                       ${
-                        transaction.status === 'completed'
+                        transaction.status === 'activate' || transaction.status === 'completed'
                           ? 'bg-green-100 text-green-800'
-                          : transaction.status === 'failed'
+                          : transaction.status === 'failed' || transaction.status === 'suspended'
                           ? 'bg-red-100 text-red-800'
-                          : 'bg-yellow-100 text-yellow-800'
+                          : transaction.status === 'pending'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-gray-100 text-gray-800'
                       }`"
                     >
                       {{ transaction.status }}
@@ -624,6 +626,7 @@
                       <tr>
                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transaction ID</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created At</th>
                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Updated At</th>
                       </tr>
@@ -632,6 +635,22 @@
                       <tr v-for="transaction in userTx.transactionIds.result" :key="transaction.id">
                         <td class="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">{{ transaction.id }}</td>
                         <td class="px-4 py-2 whitespace-nowrap text-sm font-medium text-indigo-600">{{ transaction.transactionId }}</td>
+                        <td class="px-4 py-2 whitespace-nowrap">
+                          <span
+                            :class="`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                            ${
+                              transaction.status === 'activate' || transaction.status === 'completed'
+                                ? 'bg-green-100 text-green-800'
+                                : transaction.status === 'failed' || transaction.status === 'suspended'
+                                ? 'bg-red-100 text-red-800'
+                                : transaction.status === 'pending'
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : 'bg-gray-100 text-gray-800'
+                            }`"
+                          >
+                            {{ transaction.status || 'N/A' }}
+                          </span>
+                        </td>
                         <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{{ formatDate(transaction.created_at) }}</td>
                         <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{{ formatDate(transaction.updated_at) }}</td>
                       </tr>
@@ -734,27 +753,14 @@
 <script setup>
 import { ref, computed, onMounted, watch } from "vue";
 import { debounce } from "lodash-es";
+import { useMenuItems } from '@/composables/useMenuItems';
 import Sidebar from "./Sidebar.vue";
 
 // Base URL for the API
 const baseUrl = import.meta.env.VITE_API_BASE_URL || "https://api.example.com";
 
-// Menu items definition
-const menuItems = [
-  { name: "Customers", path: "/customers", icon: "Users" },
-  { name: "Lucky Spin", path: "/luckyspin", icon: "Award" },
-  { name: "Leaderboard", path: "/leaderboard", icon: "Trophy" },
-  { name: "Withdraw", path: "/withdraw", icon: "CreditCard" },
-  { 
-    name: "Transactions", 
-    icon: "DollarSign",
-    subMenu: [
-      { name: "Transaction ID", path: "/transaction-id", icon: "CreditCard" },
-      { name: "User Transactions", path: "/user-transactions", icon: "FileText" }
-    ]
-  },
-  { name: "Ads", path: "/ads", icon: "CreditCard" },
-];
+// Get centralized menu items
+const { menuItems } = useMenuItems();
 
 // Shop data
 const shop = ref({
@@ -984,22 +990,22 @@ const fetchUserTransactions = async (userId) => {
     const data = await response.json();
     
     if (data.success && data.data) {
-      // Format the API response into our transaction display format
+      // Format the API response into our transaction display format using the new structure
       if (data.data.transactionIds && data.data.transactionIds.result) {
         userTransactions.value = data.data.transactionIds.result.map(txn => ({
-          id: txn.transactionId,
+          id: txn.id,
+          transactionId: txn.transactionId,
           type: "Transaction ID",
-          amount: data.data.user.commissions && data.data.user.commissions.length > 0 
+          amount: data.data.user && data.data.user.commissions && data.data.user.commissions.length > 0 
             ? data.data.user.commissions[0].amount 
             : "0.00",
-          status: "completed",
+          status: txn.status || "activate", // Use the status from the new API structure
           date: txn.created_at,
           created_at: txn.created_at,
-          updated_at: txn.updated_at
+          updated_at: txn.updated_at,
+          userId: txn.userId
         }));
       }
-      
-  
       
       console.log("Fetched transactions:", userTransactions.value);
     } else {
